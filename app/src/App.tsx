@@ -112,15 +112,16 @@ function LiveView({
 
         <Panel
           title="Where the same token is printing right now"
-          sub="No cash-equity arbitrage is available while the venue is shut, so nothing closes these."
+          sub="Quoted pool prices, and — separately — what the router will actually fill."
           right={live.dispersion > 0 && (
             <span className={`chip ${live.dispersion > 200 ? 'border-down/50 text-down' : 'border-warn/50 text-warn'}`}>
-              {bps(live.dispersion)} apart
+              {bps(live.dispersion)} quoted apart
             </span>
           )}
         >
           <VenueChart venues={live.venues} mark={mark} reference={l.reference}
-                      loading={live.venuesLoading} basis={live.snap?.basis ?? 0} />
+                      loading={live.venuesLoading} basis={live.snap?.basis ?? 0}
+                      executable={live.executable} />
         </Panel>
 
         <Panel title="Why the mark is the mark" sub="Same attribution, live inputs.">

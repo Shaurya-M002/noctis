@@ -46,9 +46,21 @@ instant, real money in each:
 
 ![Venue dispersion](media/09-venues.png)
 
-**1019 basis points** between the highest and lowest print. Nobody can arbitrage
-that away, because the thing you would hedge against is shut. "The on-chain price"
-is not one number.
+**1019 basis points** between the highest and lowest *quoted* pool price. During
+Monday's session the same measurement reads **82 bps** — arbitrage tightens the
+pools when there is something to arbitrage against, and they scatter when there
+is not. That contrast is the thesis in one number.
+
+Two honest qualifications, both on screen in the app:
+
+- **Quoted is not executable.** A stale pool sitting 10% away is not free money;
+  Jupiter's router walks straight past it because there is no size behind it. The
+  panel now shows what the router will *actually* fill: a **0.42% round trip at
+  $1k, 2.40% at $100k**. That gap is where most tokenised-equity arbitrage
+  headlines die.
+- Note the scale, though — assurance on AAPLx costs *tens of basis points* against
+  a round trip that already costs 42. The friction Noctis prices is small next to
+  the friction already there.
 
 Pointing the code at mainnet also changed the model twice — see
 [docs/DATA.md](docs/DATA.md):

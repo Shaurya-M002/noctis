@@ -75,8 +75,15 @@ the venue's own book is the index.
 
 That is a coherent design and it works when the venue is deep. It is exactly what
 Noctis argues against for a thin weekend DEX book — our live mode measures **1019
-bps between eight AAPLx pools at the same instant**. A mark taken from any one of
-them is a mark taken from whichever pool you happened to read.
+bps between eight AAPLx pools at the same instant** on a Sunday, against 82 bps
+during Monday's session. A mark taken from any one pool is a mark taken from
+whichever pool you happened to read.
+
+To be fair to that design: quoted dispersion is not executable dispersion, and a
+router aggregating across the pools recovers a far tighter number (0.42% round trip
+at $1k). The argument is not that the on-chain price is useless — it is that it is
+one noisy witness, which is why Nyx weights it by precision rather than either
+trusting it or ignoring it.
 
 ## Nightwatch — adjacent, not the same
 

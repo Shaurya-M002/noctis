@@ -1,4 +1,4 @@
-import type { Venue } from '../lib/feeds';
+import type { Executable, Venue } from '../lib/feeds';
 import type { Mark } from '../lib/nyx';
 import { Key } from './ui';
 import { compact } from '../lib/fmt';
@@ -11,8 +11,11 @@ import { compact } from '../lib/fmt';
  * it is not a model output — it is just what the chain says.
  */
 export function VenueChart({
-  venues, mark, reference, loading, basis,
-}: { venues: Venue[]; mark: Mark; reference: number; loading: boolean; basis: number }) {
+  venues, mark, reference, loading, basis, executable,
+}: {
+  venues: Venue[]; mark: Mark; reference: number; loading: boolean;
+  basis: number; executable: Executable[];
+}) {
   if (loading && !venues.length) {
     return <p className="py-8 text-center text-[11.5px] text-ink3">reading the venues…</p>;
   }
@@ -68,6 +71,42 @@ export function VenueChart({
           <span>{B.toFixed(2)}</span>
         </div>
       </div>
+
+      {/* Quoted pool prices are not tradeable prices, and saying so is the
+          difference between an honest panel and a misleading one. */}
+      {executable.length > 0 && (
+        <div className="mb-3 rounded-lg border border-tape/30 bg-tape/[0.05] p-3">
+          <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-tape/90">
+            What you can actually trade at — Jupiter router, right now
+          </div>
+          <div className="space-y-1">
+            {executable.map((e) => (
+              <div key={e.size} className="flex items-baseline justify-between gap-2 text-[11.5px]">
+                <span className="num text-ink3">${(e.size / 1000).toFixed(0)}k</span>
+                <span className="num text-ink2">
+                  buy <span className="text-ink">{e.buyPrice.toFixed(2)}</span>
+                  {' / '}sell <span className="text-ink">{e.sellPrice.toFixed(2)}</span>
+                </span>
+                <span className={`num ${e.roundTrip > 0.02 ? 'text-down' : 'text-warn'}`}>
+                  {(e.roundTrip * 100).toFixed(2)}% round trip
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 border-t border-line pt-2 text-[10px] leading-snug text-ink3">
+            The table below is what each pool <em>quotes</em>. This is what the
+            router will actually fill. They are not the same number, and the gap
+            between them is where most tokenised-equity &ldquo;arbitrage&rdquo;
+            headlines die — the router walks straight past a stale pool sitting 10%
+            away, because there is no size behind it.
+            {executable[0] && (
+              <> Note the scale: assurance on this name costs tens of basis points,
+              against {(executable[0].roundTrip * 100).toFixed(2)}% just to get in
+              and out.</>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* The mark usually sits ABOVE every print. That looks wrong until you know
           why, so say why. */}

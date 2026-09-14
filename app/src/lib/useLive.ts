@@ -4,8 +4,8 @@ import { sessionAt, type SessionState } from './market';
 import { computeMark, type Mark } from './nyx';
 import { quotePremium, type PremiumQuote, type Tier, type VaultState } from './pricing';
 import {
-  dispersionBps, factorsFor, fetchSnapshot, fetchVenues,
-  type LiveSnapshot, type Venue,
+  dispersionBps, factorsFor, fetchExecutable, fetchSnapshot, fetchVenues,
+  type Executable, type LiveSnapshot, type Venue,
 } from './feeds';
 
 const REFRESH_MS = 30_000;
@@ -22,6 +22,8 @@ export interface LiveState {
   venues: Venue[];
   venuesLoading: boolean;
   dispersion: number;
+  /** Round-trip cost from Jupiter's router — what a trade actually costs. */
+  executable: Executable[];
   quote: (tier: Tier, notional: number) => PremiumQuote;
   refresh: () => void;
   ageSeconds: number;
@@ -39,6 +41,7 @@ export function useLive(enabled: boolean, sym: string): LiveState {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [executable, setExecutable] = useState<Executable[]>([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [tick, setTick] = useState(0);
   const inflight = useRef(false);
@@ -90,6 +93,10 @@ export function useLive(enabled: boolean, sym: string): LiveState {
     const a = UNIVERSE.find((x) => x.sym === sym);
     if (!a) return;
     setVenuesLoading(true);
+    setExecutable([]);
+    fetchExecutable(a.mint)
+      .then((e) => { if (!dead) setExecutable(e); })
+      .catch(() => { if (!dead) setExecutable([]); });
     fetchVenues(a.mint)
       .then((v) => { if (!dead) setVenues(v); })
       .catch(() => { if (!dead) setVenues([]); })
@@ -143,7 +150,7 @@ export function useLive(enabled: boolean, sym: string): LiveState {
 
   return {
     loading, error, snap, session, assets, marks,
-    venues, venuesLoading, dispersion: dispersionBps(venues),
+    venues, venuesLoading, dispersion: dispersionBps(venues), executable,
     quote, refresh: load,
     ageSeconds: snap ? Math.floor((Date.now() - snap.fetchedAt) / 1000) : 0,
   };

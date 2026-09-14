@@ -211,7 +211,55 @@ export async function fetchVenues(mint: string): Promise<Venue[]> {
   return pairs.sort((a, b) => b.liquidity - a.liquidity).slice(0, 8);
 }
 
-/** Spread between the best-bid-ish and worst venue print, in bps of the median. */
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+export interface Executable {
+  size: number;
+  buyPrice: number;
+  sellPrice: number;
+  /** Round-trip cost as a fraction of mid. This is the number that matters. */
+  roundTrip: number;
+}
+
+/**
+ * What you can ACTUALLY trade at, from Jupiter's router.
+ *
+ * The venue table shows what each pool is quoting. Those are not the same thing,
+ * and conflating them is the classic tokenised-equity headline error: a stale CLMM
+ * position sitting 10% away looks like a screaming arbitrage right up until you
+ * notice the router walks straight past it, because there is no size behind it.
+ *
+ * The honest measure of "is this a price" is the round trip — buy N dollars of it,
+ * sell it straight back, see what is missing.
+ */
+export async function fetchExecutable(mint: string, decimals = 8): Promise<Executable[]> {
+  const SIZES = [1_000, 25_000, 100_000];
+  const out: Executable[] = [];
+  for (const size of SIZES) {
+    try {
+      const buy = await getJSON(
+        `https://lite-api.jup.ag/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}` +
+        `&amount=${Math.round(size * 1e6)}&slippageBps=100`);
+      const qty = Number(buy?.outAmount ?? 0) / 10 ** decimals;
+      if (!qty) continue;
+      const sell = await getJSON(
+        `https://lite-api.jup.ag/swap/v1/quote?inputMint=${mint}&outputMint=${USDC_MINT}` +
+        `&amount=${buy.outAmount}&slippageBps=100`);
+      const back = Number(sell?.outAmount ?? 0) / 1e6;
+      if (!back) continue;
+      const buyPrice = size / qty;
+      const sellPrice = back / qty;
+      out.push({
+        size, buyPrice, sellPrice,
+        roundTrip: (buyPrice - sellPrice) / ((buyPrice + sellPrice) / 2),
+      });
+    } catch { /* a size that will not route is information too */ }
+  }
+  return out;
+}
+
+/** Spread between the best and worst QUOTED pool price, in bps of the median.
+ *  Not a tradeable spread — see `fetchExecutable`. */
 export function dispersionBps(vs: Venue[]): number {
   if (vs.length < 2) return 0;
   const px = vs.map((v) => v.price);
