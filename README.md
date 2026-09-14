@@ -4,7 +4,8 @@
 
 Stocklana hackathon submission · Solana Foundation · September 2026
 
-**▶ [Watch the 3-minute demo](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** · captioned, no audio needed
+**▶ [Open the live demo](https://shaurya-m002.github.io/noctis/)** — real mainnet data, no wallet needed ·
+**[Watch the 3-minute walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** — captioned, no audio
 
 ![Noctis](media/02-hero.png)
 
@@ -218,6 +219,8 @@ so `marks.jsonl` appears at the next close and grows from there. A weekend leave
 about 20 marks per name behind for Monday to grade.
 
 ## Run it
+
+Or run it yourself:
 
 ```bash
 # the demo — both modes, toggle in the header

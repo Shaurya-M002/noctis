@@ -17,7 +17,7 @@ published with an error bar you can buy insurance against.
 
 - Repo: https://github.com/Shaurya-M002/noctis
 - Demo video: https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4 (3:38, captioned, no audio needed)
-- Live demo: `[vercel url — optional]` (or `cd app && npm i && npm run dev`)
+- Live demo: https://shaurya-m002.github.io/noctis/ (real mainnet data, no wallet needed)
 - Program: `NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE`
 
 **Team**
