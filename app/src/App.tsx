@@ -239,7 +239,7 @@ function SimulationView({ n }: { n: ReturnType<typeof useNoctis> }) {
       </div>
 
       <div className="space-y-4">
-        <Panel title="Trade the dark" sub="Zero fee. Zero spread. You only pay for certainty.">
+        <Panel title="Cover the dark" sub="Noctis never touches your trade. You pay only for certainty.">
           <Ticket asset={n.asset} mark={n.mark} quote={n.quote}
                   onTrade={n.trade} disabled={n.settled} />
         </Panel>

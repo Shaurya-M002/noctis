@@ -192,11 +192,23 @@ pub mod noctis {
         Ok(())
     }
 
-    /// Buy or sell at the published mark, optionally buying assurance on the reopen.
+    /// Write assurance over an exposure the caller already has.
     ///
-    /// `qty_micro` is 1e6-scaled units of the tokenized equity. The fill price is the
-    /// mark, exactly — there is no spread, and the client is shown the same premium
-    /// this instruction recomputes.
+    /// Note what this instruction does NOT do: it does not move the equity token.
+    /// Noctis is not a venue. You execute wherever you like — Jupiter, Raydium, a
+    /// CEX — and this writes **parametric** cover against the mark Noctis published,
+    /// settling on the official opening print.
+    ///
+    /// Parametric matters. The payout is a function of two published numbers, the
+    /// mark and the auction print, and of nothing about your actual fill. So there
+    /// is no claims adjuster, no proof-of-loss, no oracle for your P&L — settlement
+    /// is one permissionless instruction. The cost is basis risk: if you executed
+    /// materially away from the mark, you are covered relative to the mark and not
+    /// relative to what you paid.
+    ///
+    /// `qty_micro` is 1e6-scaled units of the tokenized equity. `is_buy` is the
+    /// direction of the exposure being covered: a long is hurt when the auction
+    /// prints below the mark.
     pub fn open_position(
         ctx: Context<OpenPosition>,
         qty_micro: u64,

@@ -97,9 +97,16 @@ the hours the other oracles are dark.
 
 **2. It sells certainty about the reopening print, and nothing else.**
 
-You are filled at the mark. Zero spread. Zero commission. Zero bps of anything.
+Noctis is **not a venue**. It never touches your trade. Execute on Jupiter,
+Raydium, a CEX, wherever — there is no order flow here to tax, which is exactly
+why the revenue model below is possible.
 
-The only money you can spend is on a guarantee about the opening auction:
+What it sells is **parametric** cover struck at the published mark. The payout is a
+function of two published numbers — the mark, and the official opening print — and
+of nothing about your actual fill. No claims adjuster, no proof of loss, no oracle
+for your P&L: settlement is one permissionless instruction. The cost of that
+simplicity is basis risk, and we name it: if you executed materially away from the
+mark, you are covered relative to the mark, not to what you paid.
 
 | tier | deductible | you get |
 |---|---|---|
@@ -107,7 +114,7 @@ The only money you can spend is on a guarantee about the opening auction:
 | **Band** | first 1σ | the vault pays every basis point beyond it |
 | **Pin** | none | you are made whole to the official opening print |
 
-Three identical trades into the same Sunday sell-off, from the live demo:
+Three identical 50-share longs into the same Sunday sell-off, from the live demo:
 
 | | premium | vault paid | net |
 |---|---|---|---|
@@ -122,9 +129,10 @@ The Pin holder's entire loss is the premium. That is what the product is.
 **3. It gets paid only when it is right.**
 
 Every dollar of premium goes to the underwriting vault. The protocol takes **10%
-of the vault's net profit** and nothing at all on your volume. Mis-estimate σ and
-the vault loses money and Noctis earns zero. There is no order-flow revenue to
-hide behind. The incentive to be calibrated *is* the business model.
+of the vault's net profit** and nothing at all on your volume — there is no volume
+to take, because Noctis is not in the trade. Mis-estimate σ and the vault loses
+money and Noctis earns zero. There is no order-flow revenue to hide behind. The
+incentive to be calibrated *is* the business model.
 
 ## Does it work?
 

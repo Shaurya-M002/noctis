@@ -4,12 +4,22 @@ Almost every venue in this hackathon's problem space charges the same way: a few
 basis points of your notional, or a spread, or both. It is a toll on flow. It pays
 the same whether the venue's price was any good.
 
-Noctis charges nothing for the trade.
+Noctis is not in the trade at all.
 
 ```
-Fill price (Noctis mark)     230.84
-Spread & commission           $0.00
+Cover struck at (Noctis mark)   230.84
+Trading fee & spread             $0.00
 ```
+
+Execute wherever you like. Noctis writes **parametric** cover struck at the mark it
+published: the payout is a function of the mark and the official opening print, and
+of nothing about your actual fill. That is what makes settlement a single
+permissionless instruction with no claims adjuster — and it is why there is no
+volume for the protocol to tax even if it wanted to.
+
+The trade-off is basis risk. Cover pays relative to the mark, not relative to your
+execution. If you filled 80 bps away from the mark on a thin pool, that 80 bps is
+yours. Stated plainly on the ticket.
 
 You pay for exactly one thing: **a guarantee about the reopening print.**
 

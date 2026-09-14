@@ -43,19 +43,19 @@ console.log('  ✓ 03-attribution');
 // Buy with Pin cover, then run the auction.
 await page.getByRole('button', { name: /^Pin/ }).click();
 await page.waitForTimeout(200);
-const ticket = page.locator('section', { hasText: 'TRADE THE DARK' }).last();
+const ticket = page.locator('section', { hasText: 'COVER THE DARK' }).last();
 await ticket.scrollIntoViewIfNeeded();
 await ticket.screenshot({ path: `${OUT}/04-ticket.png` });
 console.log('  ✓ 04-ticket');
 
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await page.waitForTimeout(300);
 await page.getByRole('button', { name: /^Band/ }).click();
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await page.waitForTimeout(300);
 // And a naked one, so the comparison is on screen.
 await page.getByRole('button', { name: /^Raw/ }).click();
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await page.waitForTimeout(300);
 
 await page.getByRole('button', { name: /run the opening auction/ }).click();

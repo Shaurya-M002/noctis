@@ -7,9 +7,10 @@ import { usd, bps, pct } from '../lib/fmt';
 /**
  * The ticket. Note what is NOT on it: a fee.
  *
- * You are filled at the Noctis mark with zero spread and zero commission. The only
- * thing you can pay for is a guarantee about the reopening print — priced as an
- * option on the gap, quoted in dollars, itemised.
+ * Noctis never touches the trade. You execute wherever you like; this writes
+ * parametric cover against the published mark, priced as an option on the gap,
+ * quoted in dollars, itemised. There is no volume to charge on, which is rather
+ * the point.
  */
 export function Ticket({
   asset, mark, quote, onTrade, disabled, quoteOnly,
@@ -47,7 +48,7 @@ export function Ticket({
                 : 'border-line text-ink3 hover:text-ink2'
             }`}
           >
-            {s} {asset.sym}
+            {s === 'BUY' ? 'LONG' : 'SHORT'} {asset.sym}
           </button>
         ))}
       </div>
@@ -70,13 +71,16 @@ export function Ticket({
 
       <div className="rounded-lg border border-line bg-void/60 px-3 py-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-[11px] text-ink2">Fill price (Noctis mark)</span>
+          <span className="text-[11px] text-ink2">Cover struck at (Noctis mark)</span>
           <span className="num text-[14px] text-mark">{mark.mid.toFixed(2)}</span>
         </div>
         <div className="mt-1 flex items-baseline justify-between">
-          <span className="text-[11px] text-ink2">Spread &amp; commission</span>
+          <span className="text-[11px] text-ink2">Trading fee &amp; spread</span>
           <span className="num text-[13px] text-up">$0.00</span>
         </div>
+        <p className="mt-1.5 text-[10px] leading-snug text-ink3">
+          Noctis is not a venue. Execute anywhere; there is no trade here to charge on.
+        </p>
       </div>
 
       <div>
@@ -160,7 +164,9 @@ export function Ticket({
       >
         {disabled
           ? 'Market reopened — auction settled'
-          : `${side} ${qty} ${asset.sym} @ ${mark.mid.toFixed(2)}${q.premium > 0 ? ` + ${usd(q.premium)}` : ''}`}
+          : q.premium > 0
+            ? `Cover ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'} — ${usd(q.premium)}`
+            : `Take the gap naked — ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'}`}
       </button>
       )}
     </div>

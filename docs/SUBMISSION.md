@@ -47,12 +47,14 @@ Noctis does two things.
 always-on signals and the token's own on-chain tape, fused by precision, produces
 a mid *and* a posterior σ. σ is the product, not the decoration.
 
-**It sells certainty about the reopening print, and nothing else.** You are filled
-at the mark with zero spread and zero commission. You may then buy a guarantee: at
-**Band** you absorb the first 1σ and an underwriting vault pays every basis point
-beyond it; at **Pin** you are made whole to the official opening print. Priced as
-what it is — a one-sided option on the overnight gap — and quoted in dollars,
-itemised.
+**It sells certainty about the reopening print, and nothing else.** Noctis is not a
+venue and never touches your trade — you execute wherever you like. It writes
+**parametric** cover struck at the published mark: at **Band** you absorb the first
+1σ and an underwriting vault pays every basis point beyond it; at **Pin** you are
+made whole to the official opening print. Priced as what it is — a one-sided option
+on the overnight gap — quoted in dollars, itemised. Because the payout depends only
+on two published numbers, settlement is one permissionless instruction with no
+claims adjuster.
 
 ## Who actually uses this
 

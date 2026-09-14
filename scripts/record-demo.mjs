@@ -151,7 +151,7 @@ await say('Sunday. Crypto is selling off and equity beta will follow it down at 
 await hush();
 
 await to('text=REOPEN ASSURANCE');
-await say('The fill costs <b>nothing</b>. No spread, no commission, no basis points.', 3400);
+await say('Noctis is <b>not a venue</b>. It never touches your trade —<br>execute wherever you like. There is no order flow here to tax.', 4400);
 await say('The only thing you can buy is <b>certainty about the reopening print</b>.'
   + '<i>Raw: free, you eat the gap. Band: you absorb the first 1σ. Pin: you are filled at the official open.</i>', 5600);
 await say('Priced as what it is — a one-sided option on the overnight gap.<br>N × σ × E[(Z−k)⁺], plus capital scarcity, plus concentration.', 5000);
@@ -160,17 +160,17 @@ await hush();
 // ─────────────────────────────────────────────────────────────── scene 4
 await page.getByRole('button', { name: /^Pin/ }).click();
 await wait(500);
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await wait(700);
 await page.getByRole('button', { name: /^Band/ }).click();
 await wait(400);
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await wait(700);
 await page.getByRole('button', { name: /^Raw/ }).click();
 await wait(400);
-await page.getByRole('button', { name: /^BUY / }).last().click();
+await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
 await wait(800);
-await say('Three identical buys. One with Pin cover, one with Band, one naked.', 3400);
+await say('Three identical 50-share longs. One with Pin cover, one with Band, one naked.', 3400);
 await hush();
 
 await page.evaluate(() => window.scrollTo({ top: 0 }));
