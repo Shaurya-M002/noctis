@@ -72,13 +72,19 @@ intended shape: a committee with ed25519 signature aggregation, stake-weighted,
 published band**. The band is the commitment that makes the slashing condition
 objective — which is a second reason to publish σ.
 
-### Vault exposure treats receipts as independent
+### Vault reserve uses one correlation for every pair
 
-`capital_at_risk` is summed per receipt. Weekend gaps across eight large-cap US
-names are heavily correlated; a single risk-off Monday hits every position at once.
-The 85% utilisation cap and the quadratic scarcity load blunt this but do not price
-it. Correct sizing is a portfolio VaR over the covariance of the covered names, not
-a sum. Modelled in the demo's vault panel, not in the program.
+The reserve is `max(long_risk, short_risk) + 0.5 · min(...)`, tracked as two legs
+on the vault. That is right in shape — one gap cannot pay both sides of a name, and
+across different names only part of the smaller leg can land at once — but it is a
+single-factor haircut. One number stands in for every pairwise correlation, and
+AAPLx/GOOGLx does not co-move like MSTRx/COINx. A real book fits the matrix.
+
+The first version of this formula was `|long − short| + 0.5·min`, which is
+**not monotone**: growing the smaller leg from 40k to 60k dropped the reserve from
+80k to 70k, so an attacker could unlock capital by writing cover on the opposite
+side. A property test caught it. Monotonicity in each leg is now asserted
+exhaustively over a grid — writing risk must never free capital.
 
 ### Tape manipulation
 

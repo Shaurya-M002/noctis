@@ -57,10 +57,12 @@ Written before anyone asks.
    attacker willing to trade real size into a thin book overnight can drag the
    mark, then trade against it. Mitigations not built: TWAP over the window,
    trimming, a cap on how far the tape may pull the mark from the factor leg.
-5. **A correlated weekend.** The vault writes across 8 names whose gaps are highly
-   correlated. Utilisation is capped at 85% and premiums load quadratically, but
-   the exposure model treats receipts as independent, which they are not. Real
-   capital sizing needs a portfolio VaR, not a sum of per-receipt reserves.
+5. **A correlated weekend.** The vault reserves `max(long, short) + 0.5·min` across
+   directions rather than summing every receipt's tail — one gap cannot pay both
+   sides of the same name, and across different names only part of the smaller leg
+   can land at once. That is a single-factor haircut, not a covariance matrix: it
+   uses one correlation number for all pairs, when AAPLx/GOOGLx and MSTRx/COINx
+   plainly do not co-move alike. A real book fits the matrix.
 6. **The oracle.** A single permissioned signer for both the mark and the official
    opening print. See [WHY_SOLANA.md](WHY_SOLANA.md) §5.
 

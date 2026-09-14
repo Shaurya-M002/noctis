@@ -246,6 +246,7 @@ and runs the whole lifecycle — register → publish mark → LP underwrites �
 programs/noctis/       Anchor program  ·  program id NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE
   src/math.rs          fixed-point premium & settlement, 12 unit tests, no floats
   src/lib.rs           marks, vault, receipts, permissionless settlement crank
+                       17 unit tests: premium math + the vault reserve's monotonicity
 app/                   the demo (Vite + React, hand-rolled SVG charts)
   src/lib/nyx.ts       the fair-value engine
   src/lib/feeds.ts     live mainnet data — Jupiter, DexScreener, Coinbase

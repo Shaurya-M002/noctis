@@ -52,6 +52,8 @@ pub mod noctis {
         v.bump = ctx.bumps.vault;
         v.tvl = 0;
         v.exposure = 0;
+        v.long_risk = 0;
+        v.short_risk = 0;
         v.premiums_collected = 0;
         v.payouts_paid = 0;
         v.shares = 0;
@@ -237,6 +239,8 @@ pub mod noctis {
             .checked_div(math::PPM).ok_or(NoctisError::MathOverflow)? as u64;
 
         let (tvl, exposure) = (ctx.accounts.vault.tvl, ctx.accounts.vault.exposure);
+        // `exposure` here feeds the utilisation load on the QUOTE. The reserve
+        // actually locked is recomputed from both legs below.
         let Premium { total: premium, capital_at_risk, .. } = quote_premium(
             notional, sigma_ppm as u64, tier, tvl, exposure, a.depth,
         ).ok_or(NoctisError::MathOverflow)?;
@@ -245,8 +249,13 @@ pub mod noctis {
         require!(premium <= max_premium, NoctisError::PremiumAboveLimit);
 
         if tier != Tier::Raw {
-            let new_exposure = exposure
-                .checked_add(capital_at_risk).ok_or(NoctisError::MathOverflow)?;
+            let (mut nl, mut ns) = (ctx.accounts.vault.long_risk, ctx.accounts.vault.short_risk);
+            if is_buy {
+                nl = nl.checked_add(capital_at_risk).ok_or(NoctisError::MathOverflow)?;
+            } else {
+                ns = ns.checked_add(capital_at_risk).ok_or(NoctisError::MathOverflow)?;
+            }
+            let new_exposure = Vault::reserve(nl, ns);
             let util = if tvl == 0 {
                 u64::MAX
             } else {
@@ -262,7 +271,9 @@ pub mod noctis {
             )?;
 
             let v = &mut ctx.accounts.vault;
-            v.exposure = new_exposure;
+            v.long_risk = nl;
+            v.short_risk = ns;
+            v.resync();
             v.tvl = v.tvl.checked_add(premium).ok_or(NoctisError::MathOverflow)?;
             v.premiums_collected = v.premiums_collected
                 .checked_add(premium).ok_or(NoctisError::MathOverflow)?;
@@ -333,11 +344,16 @@ pub mod noctis {
         let payout = settlement_payout(
             r.is_buy, r.fill_price, open_print, r.sigma_abs, r.qty_micro, tier,
         ).ok_or(NoctisError::MathOverflow)?;
-        let (receipt_key, receipt_owner, capital_at_risk) =
-            (r.key(), r.owner, r.capital_at_risk);
+        let (receipt_key, receipt_owner, capital_at_risk, was_buy) =
+            (r.key(), r.owner, r.capital_at_risk, r.is_buy);
 
         let v = &mut ctx.accounts.vault;
-        v.exposure = v.exposure.saturating_sub(capital_at_risk);
+        if was_buy {
+            v.long_risk = v.long_risk.saturating_sub(capital_at_risk);
+        } else {
+            v.short_risk = v.short_risk.saturating_sub(capital_at_risk);
+        }
+        v.resync();
         let payable = payout.min(v.tvl);
         let vault_bump = v.bump;
 
@@ -390,7 +406,13 @@ pub struct Config {
 #[derive(InitSpace)]
 pub struct Vault {
     pub tvl: u64,
+    /// Capital reserved against live receipts. Derived from the two legs below,
+    /// never accumulated directly — see `Vault::reserve`.
     pub exposure: u64,
+    /// Gross reserve owed to receipts that lose when prices GAP DOWN (covered longs).
+    pub long_risk: u64,
+    /// Gross reserve owed to receipts that lose when prices GAP UP (covered shorts).
+    pub short_risk: u64,
     pub premiums_collected: u64,
     pub payouts_paid: u64,
     pub shares: u64,
@@ -398,6 +420,47 @@ pub struct Vault {
     /// the same trader on the same asset cannot collide.
     pub receipts_opened: u64,
     pub bump: u8,
+}
+
+impl Vault {
+    /// Portfolio reserve, not a sum of per-receipt reserves.
+    ///
+    /// Summing every receipt's 4-sigma tail is the *perfectly correlated, all one
+    /// direction* worst case. It is safe, and it is also wrong in a way that costs
+    /// LPs money: a book that is long AAPLx cover and short SPYx cover locks the
+    /// same capital as one that is long both, even though a Monday gap cannot hurt
+    /// both sides at once.
+    ///
+    ///     reserve = max(long, short)  +  RESIDUAL · min(long, short)
+    ///
+    /// Why that shape. For a SINGLE name the two legs are mutually exclusive — one
+    /// gap cannot be both up and down — so the worst case is `max`, not the sum.
+    /// Across DIFFERENT names both can pay at once (AAPLx gaps down while TSLAx
+    /// gaps up), so some of the smaller leg has to stay reserved. RESIDUAL is the
+    /// fraction that can land simultaneously: 0 would assume one name, 1 would
+    /// assume full independence, and 0.5 is the damped middle that a weekend gap
+    /// correlation around 0.7 across large-cap US equities implies.
+    ///
+    /// The obvious formula, `|long − short| + RESIDUAL · min`, is wrong and a test
+    /// caught it: its derivative in the smaller leg is negative, so adding cover on
+    /// the other side *reduced* the reserve. Monotonicity in each leg is a safety
+    /// property, not a nicety — writing risk must never free capital.
+    ///
+    /// Deliberately not a covariance matrix. On-chain that is an N×N of estimated
+    /// correlations, maintained every block, for a second-order refinement of a
+    /// number whose first-order driver is sigma.
+    pub fn reserve(long_risk: u64, short_risk: u64) -> u64 {
+        const RESIDUAL_BPS: u128 = 5_000; // 0.50
+
+        let hi = core::cmp::max(long_risk, short_risk) as u128;
+        let lo = core::cmp::min(long_risk, short_risk) as u128;
+        let residual = lo.saturating_mul(RESIDUAL_BPS) / 10_000;
+        u64::try_from(hi.saturating_add(residual)).unwrap_or(u64::MAX)
+    }
+
+    fn resync(&mut self) {
+        self.exposure = Vault::reserve(self.long_risk, self.short_risk);
+    }
 }
 
 #[account]
@@ -467,6 +530,63 @@ pub enum Session {
     Overnight = 3,
     Weekend = 4,
     Holiday = 5,
+}
+
+#[cfg(test)]
+mod vault_tests {
+    use super::Vault;
+
+    const M: u64 = 1_000_000;
+
+    #[test]
+    fn a_one_sided_book_reserves_the_whole_gross() {
+        assert_eq!(Vault::reserve(100_000 * M, 0), 100_000 * M);
+        assert_eq!(Vault::reserve(0, 100_000 * M), 100_000 * M);
+    }
+
+    #[test]
+    fn offsetting_directions_free_capital_but_not_all_of_it() {
+        // Balanced book: one gap cannot pay both sides for the same name, but these
+        // are different names, so half the smaller leg stays reserved.
+        let r = Vault::reserve(100_000 * M, 100_000 * M);
+        assert_eq!(r, 150_000 * M);
+        // Strictly better than summing, strictly worse than assuming a perfect hedge.
+        assert!(r < 200_000 * M);
+        assert!(r > 100_000 * M);
+    }
+
+    #[test]
+    fn reserve_is_monotone_in_each_leg() {
+        // Writing risk must NEVER free capital. The first version of this formula
+        // failed exactly here: `|l − s| + 0.5·min` fell from 80k to 70k when the
+        // smaller leg grew from 40k to 60k, so an attacker could unlock reserve by
+        // piling on the opposite side.
+        let base = Vault::reserve(100_000 * M, 40_000 * M);
+        assert!(Vault::reserve(120_000 * M, 40_000 * M) > base);
+        assert!(Vault::reserve(100_000 * M, 60_000 * M) > base);
+
+        // Exhaustive on a grid, both directions.
+        for l in (0..=200u64).step_by(7) {
+            for s in (0..=200u64).step_by(11) {
+                let r = Vault::reserve(l * M, s * M);
+                assert!(Vault::reserve((l + 1) * M, s * M) >= r);
+                assert!(Vault::reserve(l * M, (s + 1) * M) >= r);
+            }
+        }
+    }
+
+    #[test]
+    fn reserve_never_exceeds_the_gross_sum() {
+        for (l, s) in [(1u64, 0u64), (7, 3), (100, 100), (1_000_000, 999_999)] {
+            assert!(Vault::reserve(l * M, s * M) <= (l + s) * M);
+        }
+    }
+
+    #[test]
+    fn reserve_does_not_wrap_at_the_top() {
+        assert_eq!(Vault::reserve(u64::MAX, 0), u64::MAX);
+        assert!(Vault::reserve(u64::MAX, u64::MAX) <= u64::MAX);
+    }
 }
 
 // ---------------------------------------------------------------- contexts
