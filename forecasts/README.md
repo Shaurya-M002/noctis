@@ -30,8 +30,13 @@ So a weekend produces roughly 20 marks per name spread across the window, and
 Monday resolves them. Nothing accumulates during the session, when there is a real
 price and nothing to forecast.
 
-It commits `marks.jsonl` and only `marks.jsonl`. It never exits non-zero, so a dead
-feed cannot kill the schedule.
+It commits `marks.jsonl`, and only `marks.jsonl`, and pushes it — a forecast nobody
+can see proves nothing. A failed push is logged and retried next hour rather than
+left to rot locally. It never exits non-zero, so a dead feed cannot kill the
+schedule.
+
+`marks.jsonl` does not exist until the first dark window after the scheduler was
+installed. That is the intended behaviour, not a missing file.
 
 ```bash
 launchctl unload -w ~/Library/LaunchAgents/com.noctis.forecast.plist   # stop

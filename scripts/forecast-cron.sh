@@ -21,10 +21,19 @@ LOG="$ROOT/forecasts/cron.log"
   npx tsx engine/forecast.ts auto 2>&1
 
   # Commit only the log, only if it moved. Never touches anything else in the tree.
-  if ! git diff --quiet -- forecasts/marks.jsonl 2>/dev/null; then
+  if ! git diff --quiet --ignore-submodules HEAD -- forecasts/marks.jsonl 2>/dev/null; then
     git add forecasts/marks.jsonl
-    git -c user.email="madukuri.shaurya@skan.ai" -c user.name="Shaurya Madukuri" \
-      commit -q -m "forecast: $(date -u '+%Y-%m-%d %H:%MZ')" -- forecasts/marks.jsonl \
-      && echo "  committed"
+    if git -c user.email="madukuri.shaurya@skan.ai" -c user.name="Shaurya Madukuri" \
+         commit -q -m "forecast: $(date -u '+%Y-%m-%d %H:%MZ')" -- forecasts/marks.jsonl; then
+      echo "  committed"
+      # A forecast nobody can see proves nothing, so publish it. --no-verify keeps
+      # this off any hooks; a failed push is logged and retried next hour rather
+      # than left to rot locally.
+      if git push -q --no-verify origin HEAD:main 2>&1; then
+        echo "  pushed"
+      else
+        echo "  push failed — will retry next run"
+      fi
+    fi
   fi
 } >> "$LOG" 2>&1

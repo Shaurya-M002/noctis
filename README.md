@@ -193,15 +193,17 @@ npm run forecast:score     # after the bell, fetch what actually happened
 npm run forecast           # the running scorecard
 ```
 
-`forecasts/marks.jsonl` holds timestamped marks with their bands and every input
+[`forecasts/`](forecasts/) holds timestamped marks with their bands and every input
 that produced them, written before the auction they predict. Check the commit date
 against the print. You do not have to trust us, run our code, or accept our
-synthetic world — the file was in the repo before the answer existed.
+synthetic world — the line was in the repo before the answer existed.
 
-It fills itself. A LaunchAgent runs `scripts/forecast-cron.sh` hourly; the script
-takes a mark whenever US equities are dark and the last one is stale, scores
-whenever a forecast's bell has rung, and does nothing otherwise. A weekend leaves
-about 20 marks per name behind, and Monday grades them.
+It fills itself, and pushes. A LaunchAgent runs `scripts/forecast-cron.sh` hourly;
+the script takes a mark whenever US equities are dark and the last one is stale,
+scores whenever a forecast's bell has rung, commits, and pushes here. Nothing is
+recorded during the session, when there is a real price and nothing to forecast —
+so `marks.jsonl` appears at the next close and grows from there. A weekend leaves
+about 20 marks per name behind for Monday to grade.
 
 ## Run it
 
