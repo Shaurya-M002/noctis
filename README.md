@@ -4,6 +4,8 @@
 
 Stocklana hackathon submission · Solana Foundation · September 2026
 
+**▶ [Watch the 3-minute demo](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** · captioned, no audio needed
+
 ![Noctis](media/02-hero.png)
 
 ---

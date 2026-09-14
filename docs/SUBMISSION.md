@@ -15,9 +15,9 @@ published with an error bar you can buy insurance against.
 
 **Links**
 
-- Repo: `[github url]`
-- Demo video: `media/noctis-demo.mp4` → `[youtube/loom url]`
-- Live demo: `[vercel url]` (or `cd app && npm i && npm run dev`)
+- Repo: https://github.com/Shaurya-M002/noctis
+- Demo video: https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4 (3:38, captioned, no audio needed)
+- Live demo: `[vercel url — optional]` (or `cd app && npm i && npm run dev`)
 - Program: `NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE`
 
 **Team**
