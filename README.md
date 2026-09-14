@@ -196,6 +196,11 @@ that produced them, written before the auction they predict. Check the commit da
 against the print. You do not have to trust us, run our code, or accept our
 synthetic world — the file was in the repo before the answer existed.
 
+It fills itself. A LaunchAgent runs `scripts/forecast-cron.sh` hourly; the script
+takes a mark whenever US equities are dark and the last one is stale, scores
+whenever a forecast's bell has rung, and does nothing otherwise. A weekend leaves
+about 20 marks per name behind, and Monday grades them.
+
 ## Run it
 
 ```bash

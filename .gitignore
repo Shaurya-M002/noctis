@@ -10,3 +10,5 @@ media/*.webm
 
 # build caches
 *.tsbuildinfo
+forecasts/cron.log
+forecasts/launchd.log

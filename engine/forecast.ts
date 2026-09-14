@@ -127,12 +127,18 @@ async function record() {
 }
 
 /**
- * Score every unscored forecast whose window has since resolved.
+ * Score every unscored forecast whose target bell has actually rung.
  *
- * The "actual" is Jupiter's reference price once it has moved past the timestamp
- * the forecast was taken at — i.e. the underlying's price after the market
- * reopened. Not the auction print to the tick, but it is the number the same feed
- * reports, which keeps the comparison apples-to-apples and independently checkable.
+ * The gate matters and the obvious version of it is wrong. A forecast says "this is
+ * where the NEXT auction prints", so it cannot be scored against a price an hour
+ * later — that is an intraday tick, not the thing predicted. A forecast only
+ * resolves once `recordedAt + hoursToOpen` has passed AND the reference feed has
+ * printed since that bell.
+ *
+ * The "actual" is Jupiter's reference price for the underlying, read shortly after
+ * the reopen. Not the auction print to the tick, but it comes from the same feed
+ * that produced the inputs, which keeps the comparison apples-to-apples and lets
+ * anyone else check it.
  */
 async function score() {
   if (!existsSync(FILE)) { console.error('nothing recorded yet'); process.exit(1); }
@@ -147,15 +153,21 @@ async function score() {
     if (r) nowRef[a.sym] = { price: r, at: j?.stockData?.updatedAt ?? null };
   }
 
+  const now = Date.now();
   let updated = 0;
   for (const row of rows) {
     if (row.scored) continue;
+
+    // Has the bell this forecast was aimed at actually rung?
+    const bellMs = Date.parse(row.recordedAt) + row.hoursToOpen * 3_600_000;
+    if (now < bellMs) continue;
+
     const results: any[] = [];
     for (const m of row.marks) {
       const cur = nowRef[m.sym];
       if (!cur) continue;
-      // Only score once the reference has genuinely moved on from the snapshot.
-      if (cur.at && Date.parse(cur.at) <= Date.parse(row.recordedAt) + 3_600_000) continue;
+      // And has the feed printed since it?
+      if (!cur.at || Date.parse(cur.at) < bellMs) continue;
       if (Math.abs(cur.price - m.reference) < 1e-9) continue; // still frozen
       const band = m.sigma * m.mid;
       results.push({
@@ -174,7 +186,9 @@ async function score() {
     }
   }
   writeFileSync(FILE, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
-  console.log(updated ? `  scored ${updated} forecast(s)` : '  nothing resolved yet — the market has not reopened');
+  console.log(updated
+    ? `  scored ${updated} forecast(s)`
+    : '  nothing resolved yet — no forecast has reached its bell');
   report();
 }
 
@@ -185,7 +199,14 @@ function report() {
   console.log(`\n  FORECAST LOG — ${rows.length} recorded, ${scored.length} resolved\n`);
   for (const r of rows) {
     console.log(`  ${r.etClock}  (${r.session}, ${r.hoursToOpen.toFixed(0)}h to the bell)`);
-    if (!r.scored) { console.log('    …unresolved\n'); continue; }
+    if (!r.scored) {
+      const bell = new Date(Date.parse(r.recordedAt) + r.hoursToOpen * 3_600_000);
+      const away = (bell.getTime() - Date.now()) / 3_600_000;
+      console.log(away > 0
+        ? `    …unresolved, ${away.toFixed(1)}h until its bell\n`
+        : '    …unresolved, awaiting the reference print\n');
+      continue;
+    }
     for (const s of r.scored.results) {
       const m = r.marks.find((x: any) => x.sym === s.sym);
       const tick = s.insideBand ? '\x1b[32m✓\x1b[0m' : '\x1b[33m·\x1b[0m';
@@ -212,9 +233,48 @@ function report() {
   }
 }
 
+/**
+ * Decide for itself whether there is anything worth doing.
+ *
+ * Meant to be run on a dumb hourly timer. Recording every hour would bloat the log
+ * and correlate the observations; recording only when someone remembers would give
+ * us three data points. So: take a mark whenever the market is DARK and the last
+ * one is stale, and score whenever it is open. Idempotent, and exits 0 either way
+ * so a cron failure never means a dead scheduler.
+ */
+async function auto() {
+  const session = sessionAt(new Date());
+  const MIN_GAP_H = 2.5;
+
+  if (session.isOpen) {
+    await score();
+    return;
+  }
+
+  if (existsSync(FILE)) {
+    const lines = readFileSync(FILE, 'utf8').trim().split('\n').filter(Boolean);
+    const last = lines.length ? JSON.parse(lines[lines.length - 1]) : null;
+    if (last) {
+      const ageH = (Date.now() - Date.parse(last.recordedAt)) / 3_600_000;
+      if (ageH < MIN_GAP_H) {
+        console.log(`  last mark is ${ageH.toFixed(1)}h old, under the ${MIN_GAP_H}h floor — skipping`);
+        return;
+      }
+    }
+  }
+  await record();
+}
+
 const cmd = process.argv[2] ?? 'report';
 (async () => {
-  if (cmd === 'record') await record();
-  else if (cmd === 'score') await score();
-  else report();
+  try {
+    if (cmd === 'record') await record();
+    else if (cmd === 'score') await score();
+    else if (cmd === 'auto') await auto();
+    else report();
+  } catch (e) {
+    // A dead feed must not kill the scheduler.
+    console.error('  forecast failed:', e instanceof Error ? e.message : e);
+    process.exit(cmd === 'auto' ? 0 : 1);
+  }
 })();

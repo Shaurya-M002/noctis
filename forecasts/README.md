@@ -16,6 +16,31 @@ our code or believing our synthetic world.
 It is also the only artefact here that can make us look bad later, which is rather
 the point of including it.
 
+## It records itself
+
+A LaunchAgent (`~/Library/LaunchAgents/com.noctis.forecast.plist`) pokes
+`scripts/forecast-cron.sh` hourly. The script does not decide on a schedule — it
+asks the market:
+
+- **US equities dark** and the last mark is more than 2.5h old → take a new mark.
+- **Market open** → try to score anything whose bell has rung.
+- **Otherwise** → nothing, exit 0.
+
+So a weekend produces roughly 20 marks per name spread across the window, and
+Monday resolves them. Nothing accumulates during the session, when there is a real
+price and nothing to forecast.
+
+It commits `marks.jsonl` and only `marks.jsonl`. It never exits non-zero, so a dead
+feed cannot kill the schedule.
+
+```bash
+launchctl unload -w ~/Library/LaunchAgents/com.noctis.forecast.plist   # stop
+tail -f forecasts/cron.log                                            # watch
+```
+
+Caveat: it fires on wake, not while asleep. A laptop shut all weekend records
+nothing until it opens.
+
 ## Reading a line
 
 ```
@@ -27,6 +52,12 @@ basis         complex-wide median xStock dislocation, stripped before signal
 marks[]       per asset: mid, sigma, lo, hi, reference, onChain, dislocation
 scored        null, or { scoredAt, results[] } with actual, errors, and z
 ```
+
+A forecast only resolves once `recordedAt + hoursToOpen` has passed — the bell it
+was actually aimed at — and the reference feed has printed since. Scoring a
+"where will the next auction print" forecast against an intraday tick an hour later
+would be measuring the wrong thing, and the first version of the scorer did exactly
+that.
 
 `z = (actual − mid) / (sigma × mid)`. Across enough lines, those z values should
 look like a standardised Student-t with about 4 degrees of freedom — that is the
