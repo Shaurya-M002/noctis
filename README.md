@@ -263,6 +263,8 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 ## Docs
 
+- [CONTRIBUTING.md](CONTRIBUTING.md) — running it from a clean clone, and three toolchain traps that cost us an hour each
+
 - [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
 - [docs/SECURITY.md](docs/SECURITY.md) — threat model, and the critical bug we found in our own settlement path
 - [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
