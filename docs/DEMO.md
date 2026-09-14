@@ -10,8 +10,8 @@ Everything is deterministic. Same seed, same numbers, every run.
 
 ## 0 · The frame (15s)
 
-> A week has 168 hours. US equities discover a price in 32.5 of them. Tokenized
-> equities on Solana trade all 168.
+> A week has 168 hours. US equities discover a price in 32.5 of them. Held in
+> self-custody, xStocks trade all 168 — the DEXs never close.
 
 Point at **THE HOLE** in the left rail. Regular session 32.5h, extended 40h,
 overnight 30h — Pyth Pro covers that far, 24/5. **Weekend and holidays: 65.5h.**
@@ -27,7 +27,9 @@ Saturday 10:00 ET, AAPLx.
 - **Noctis: 230.84 ± 2.39.**
 
 > Not a last trade. A conditional expectation of Monday's opening print, published
-> with the one number every other oracle omits.
+> with a σ that is a forecast error for that auction — not, as with Pyth's
+> confidence interval, a snapshot of how much publishers disagree right now. And
+> published in a window where Pyth's equity feed says `MARKET_CLOSED`.
 
 ## 2 · σ breathes (20s)
 

@@ -149,6 +149,7 @@ describe('noctis', () => {
   });
 
   it('charges nothing for a RAW fill', async () => {
+    await nextReceipt();
     const before = (await getAccount(provider.connection, traderQuote)).amount;
     await program.methods.openPosition(u64(10 * M), true, 0, u64(0))
       .accountsPartial({
@@ -164,6 +165,7 @@ describe('noctis', () => {
   it('two fee-free trades do not collide on the receipt PDA', async () => {
     // Regression: seeding on premiums_collected made this fail, because RAW
     // leaves the premium counter untouched.
+    await nextReceipt();
     await program.methods.openPosition(u64(10 * M), true, 0, u64(0))
       .accountsPartial({
         trader: trader.publicKey, config, vault, asset, quoteMint: usdc,
@@ -177,13 +179,35 @@ describe('noctis', () => {
 
   let pinReceipt: PublicKey;
   let pinPremium = 0;
+  const opened: PublicKey[] = [];
+
+  /** Derive the receipt PDA the NEXT open_position will create. */
+  const nextReceipt = async () => {
+    const v = await program.account.vault.fetch(vault);
+    const [pda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('receipt'), trader.publicKey.toBuffer(), asset.toBuffer(),
+       v.receiptsOpened.toArrayLike(Buffer, 'le', 8)],
+      program.programId);
+    opened.push(pda);
+    return pda;
+  };
+
+  /** Permissionless crank over everything outstanding. Idempotent. */
+  const settleAll = async () => {
+    for (const receipt of opened) {
+      const r = await program.account.receipt.fetchNullable(receipt);
+      if (!r || r.settled) continue;
+      await program.methods.settleReceipt()
+        .accountsPartial({
+          cranker: authority.publicKey, config, vault, asset, receipt,
+          owner: trader.publicKey, quoteMint: usdc,
+          ownerQuote: traderQuote, vaultQuote, tokenProgram: TOKEN_PROGRAM_ID,
+        }).rpc();
+    }
+  };
 
   it('prices Pin cover as an option on the gap, and charges exactly that', async () => {
-    const v0 = await program.account.vault.fetch(vault);
-    [pinReceipt] = PublicKey.findProgramAddressSync(
-      [Buffer.from('receipt'), trader.publicKey.toBuffer(), asset.toBuffer(),
-       v0.receiptsOpened.toArrayLike(Buffer, 'le', 8)],
-      program.programId);
+    pinReceipt = await nextReceipt();
 
     const before = (await getAccount(provider.connection, traderQuote)).amount;
 
@@ -296,9 +320,12 @@ describe('noctis', () => {
   });
 
   it('refuses to let an LP withdraw capital that is backing live receipts', async () => {
+    // Crank everything outstanding so the next dark window may open.
+    await settleAll();
     // Re-arm: a fresh mark and a fresh Band position lock capital again.
     await program.methods.publishMark(u64(224.30 * M), 9_000, 3)
       .accountsPartial({ config, oracle: authority.publicKey, asset }).rpc();
+    await nextReceipt();
     await program.methods.openPosition(u64(400 * M), true, 1, u64(1_000 * M))
       .accountsPartial({
         trader: trader.publicKey, config, vault, asset, quoteMint: usdc,
@@ -319,6 +346,79 @@ describe('noctis', () => {
       assert.fail('should have refused');
     } catch (e: any) {
       assert.include(e.toString(), 'CapitalLocked');
+    }
+  });
+
+  it('closes the settlement-replay hole across dark windows', async () => {
+    // The bug this guards: `open_print` used to persist on the asset account
+    // forever. After one Monday auction, a receipt written the FOLLOWING weekend
+    // could be settled instantly against the previous week's print — pick
+    // whichever direction pays and drain the vault.
+
+    // Close out the current window: print the auction, crank the queue.
+    await program.methods.postOpenPrint(u64(230 * M))
+      .accountsPartial({ config, oracle: authority.publicKey, asset }).rpc();
+    await settleAll();
+
+    const before = await program.account.assetMark.fetch(asset);
+    assert.equal(before.openReceipts.toNumber(), 0);
+    assert.isAbove(before.openPrint.toNumber(), 0, 'last window printed');
+
+    // A new dark window opens. The epoch must advance.
+    await program.methods.publishMark(u64(230 * M), 12_000, 4)
+      .accountsPartial({ config, oracle: authority.publicKey, asset }).rpc();
+    const after = await program.account.assetMark.fetch(asset);
+    assert.equal(after.epoch.toNumber(), before.epoch.toNumber() + 1);
+
+    // Write a receipt in the NEW window...
+    const fresh = await nextReceipt();
+    await program.methods.openPosition(u64(20 * M), true, 2, u64(500 * M))
+      .accountsPartial({
+        trader: trader.publicKey, config, vault, asset, quoteMint: usdc,
+        traderQuote, vaultQuote, tokenProgram: TOKEN_PROGRAM_ID,
+      }).signers([trader]).rpc();
+
+    const r = await program.account.receipt.fetch(fresh);
+    assert.equal(r.epoch.toNumber(), after.epoch.toNumber());
+
+    // ...and try to cash it against last window's print. This is the exploit.
+    try {
+      await program.methods.settleReceipt()
+        .accountsPartial({
+          cranker: authority.publicKey, config, vault, asset, receipt: fresh,
+          owner: trader.publicKey, quoteMint: usdc,
+          ownerQuote: traderQuote, vaultQuote, tokenProgram: TOKEN_PROGRAM_ID,
+        }).rpc();
+      assert.fail('settled against a stale auction print');
+    } catch (e: any) {
+      assert.include(e.toString(), 'WrongEpoch');
+    }
+  });
+
+  it('will not open a new window while receipts are still unsettled', async () => {
+    await program.methods.postOpenPrint(u64(232 * M))
+      .accountsPartial({ config, oracle: authority.publicKey, asset }).rpc();
+    const a = await program.account.assetMark.fetch(asset);
+    assert.isAbove(a.openReceipts.toNumber(), 0);
+    try {
+      await program.methods.publishMark(u64(232 * M), 8_000, 4)
+        .accountsPartial({ config, oracle: authority.publicKey, asset }).rpc();
+      assert.fail('advanced the epoch over a live receipt');
+    } catch (e: any) {
+      assert.include(e.toString(), 'SettlementPending');
+    }
+  });
+
+  it('refuses to insure a window whose auction has already printed', async () => {
+    try {
+      await program.methods.openPosition(u64(5 * M), true, 1, u64(500 * M))
+        .accountsPartial({
+          trader: trader.publicKey, config, vault, asset, quoteMint: usdc,
+          traderQuote, vaultQuote, tokenProgram: TOKEN_PROGRAM_ID,
+        }).signers([trader]).rpc();
+      assert.fail('insured a window that has already resolved');
+    } catch (e: any) {
+      assert.include(e.toString(), 'AuctionAlreadyPrinted');
     }
   });
 

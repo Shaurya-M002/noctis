@@ -12,9 +12,11 @@ Stocklana hackathon submission · Solana Foundation · September 2026
 
 A week has 168 hours. US equities discover a price in **32.5** of them.
 
-xStocks and every other tokenized-equity program on Solana trade all 168. So for
-four fifths of the week, an asset changes hands at a price that no venue anywhere
-on earth is producing. Ask the infrastructure what AAPLx is worth at 03:00 on a
+Held in self-custody, xStocks trade **all 168** — Raydium, Orca and Meteora do not
+close. (Kraken's own book is 24/5, with weekends still "in development", which
+sharpens the point: the venue that could manage weekend risk is shut, and the one
+that stays open is the one with no risk desk.) So for four fifths of the week, an
+asset changes hands at a price that no venue anywhere on earth is producing. Ask the infrastructure what AAPLx is worth at 03:00 on a
 Sunday and you get one of three bad answers:
 
 | | answer | why it's bad |
@@ -72,7 +74,7 @@ other's evidence.
 
 ## What Noctis does
 
-**1. It publishes a mark, with the number every other oracle omits.**
+**1. It publishes a mark for hours when the incumbents publish nothing.**
 
 Nyx — the fair-value engine — fuses two independent, noisy witnesses to the
 latent value of a tokenized equity:
@@ -82,8 +84,16 @@ latent value of a tokenized equity:
 - the **on-chain tape** itself, weighted by how much money actually stood behind it.
 
 It combines them by precision, which is why it beats both of its own inputs, and
-it publishes the posterior standard deviation **σ** alongside the mid. Not
-decoration — σ is the product.
+it publishes the posterior standard deviation **σ** alongside the mid.
+
+To be precise about the incumbent, because it matters: **Pyth already publishes a
+confidence interval** — it is the one oracle that does, and it deserves the credit.
+But two things differ. Pyth's `conf` is a *snapshot of disagreement between
+publishers right now*; Noctis's σ is a *forecast error for a specific future
+event*, the reopening auction. And Pyth's equity feeds are marked `MARKET_CLOSED`
+during exactly the window Noctis exists for — there is no price to attach a
+confidence to. Noctis is not "the oracle with error bars." It is an error bar for
+the hours the other oracles are dark.
 
 **2. It sells certainty about the reopening print, and nothing else.**
 
@@ -212,6 +222,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 ## Docs
 
+- [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
 - [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
 - [docs/MODEL.md](docs/MODEL.md) — how the mark and σ are built, and what σ is made of
 - [docs/PRICING.md](docs/PRICING.md) — the premium as an option on the gap, and a load we tested and deleted

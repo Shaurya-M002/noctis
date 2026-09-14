@@ -28,8 +28,11 @@ nobody is printing US equities.
 
 ## What it is
 
-A week has 168 hours. US equities discover a price in 32.5 of them. Every
-tokenized equity on Solana trades all 168.
+A week has 168 hours. US equities discover a price in 32.5 of them. Held in
+self-custody, xStocks trade all 168 — Raydium, Orca and Meteora do not close.
+Kraken's own book is 24/5 with weekends still in development, which sharpens the
+point rather than softening it: the venue that could manage weekend risk is shut,
+and the one that stays open has no risk desk.
 
 So for four fifths of the week the asset changes hands at a price no venue on
 earth is producing. Pyth and Chainlink return `MARKET_CLOSED`. The last official
@@ -140,6 +143,27 @@ vols are hand-set in both modes; the app is not wallet-connected (the chain is
 exercised by the test suite instead); the devnet deploy did not happen because the
 faucet rate-limited us and the binary needs ~2.7 SOL of rent; and the oracle is a
 single permissioned signer, which is the first thing we would fix.
+
+## What we did not invent
+
+Written up in full in `docs/COMPETITION.md`, including a claim we had to correct.
+
+**AfterHours** (Arbitrum Open House Singapore 2026) built weekend-gap puts on
+Robinhood Chain rTokens with an ERC-4626 writer vault, priced on-chain in Rust,
+with volatility split across open and closed seconds — the same insight as our
+information-time weighting. The insurance leg of Noctis is not novel and we are
+not going to pretend it is. What they do not have is a fair-value engine: they
+price off Chainlink's last print, which during the dark window is Friday's close.
+
+**Pyth already publishes confidence intervals** — the only major oracle that does.
+An earlier draft of ours said σ was "the number every other oracle omits," which
+was simply wrong. The surviving distinction: Pyth's `conf` is publisher
+disagreement *right now*; ours is forecast error for a *specific future auction*.
+And Pyth's equity feeds read `MARKET_CLOSED` during the window we exist for.
+
+What we believe is new: publishing a forecast σ for the reopening print and
+pricing a product off it, so model calibration and protocol revenue are the same
+number — and getting paid on vault net profit rather than volume.
 
 ## Next
 

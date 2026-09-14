@@ -71,8 +71,10 @@ export function Waterfall({ mark }: { mark: Mark }) {
           Variance budget
         </h3>
         <p className="mt-1 mb-3 text-[11px] text-ink3">
-          σ = {pct(mark.sigma)}. This is what the premium is priced off — and it is
-          the number the rest of the market refuses to publish.
+          σ = {pct(mark.sigma)}. This is what the premium is priced off. Pyth
+          publishes a confidence interval too — but it measures publisher
+          disagreement right now, and its equity feeds are closed during this
+          window. This is forecast error for Monday&apos;s auction.
         </p>
         <div className="space-y-2.5">
           {varRows.map((r) => {

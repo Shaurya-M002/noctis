@@ -40,9 +40,10 @@ export function PriceHero({
           <Confidence v={mark.confidence} />
         </div>
         <p className="mt-3 border-t border-mark/20 pt-2.5 text-[11.5px] leading-relaxed text-ink2">
-          Not a last trade. A conditional expectation of Monday&apos;s opening print,
-          published with the one number every other oracle omits: how wrong it is
-          allowed to be.
+          Not a last trade. A conditional expectation of Monday&apos;s opening
+          print, published with a σ that is forecast error for that specific
+          auction — and published in a window where the equity feed above has no
+          price to be confident about at all.
         </p>
       </div>
 

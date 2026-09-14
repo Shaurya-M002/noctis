@@ -83,6 +83,9 @@ pub mod noctis {
         a.sigma_ppm = 0;
         a.published_at = 0;
         a.open_print = 0;
+        a.epoch = 0;
+        a.open_print_epoch = 0;
+        a.open_receipts = 0;
         a.session = Session::Regular as u8;
         a.bump = ctx.bumps.asset;
         Ok(())
@@ -105,12 +108,24 @@ pub mod noctis {
         require!(session <= Session::Holiday as u8, NoctisError::BadSession);
 
         let a = &mut ctx.accounts.asset;
+
+        // A mark published after this epoch's auction has printed opens the NEXT
+        // dark window. Refuse while receipts from the current one are outstanding,
+        // so nothing can be stranded on the wrong side of an epoch boundary. The
+        // crank is permissionless, so anyone can clear the queue.
+        if a.open_print > 0 && a.open_print_epoch == a.epoch {
+            require!(a.open_receipts == 0, NoctisError::SettlementPending);
+            a.epoch = a.epoch.checked_add(1).ok_or(NoctisError::MathOverflow)?;
+        }
+
         a.mid = mid;
         a.sigma_ppm = sigma_ppm;
         a.session = session;
         a.published_at = Clock::get()?.unix_timestamp;
 
-        emit!(MarkPublished { mint: a.mint, mid, sigma_ppm, session, ts: a.published_at });
+        emit!(MarkPublished {
+            mint: a.mint, mid, sigma_ppm, session, epoch: a.epoch, ts: a.published_at,
+        });
         Ok(())
     }
 
@@ -198,6 +213,12 @@ pub mod noctis {
         let now = Clock::get()?.unix_timestamp;
         require!(now - a.published_at <= MAX_MARK_AGE_SECONDS, NoctisError::StaleMark);
         require!(a.sigma_ppm > 0, NoctisError::NoMark);
+        // There is nothing left to insure once this epoch's auction has printed.
+        require!(
+            !(a.open_print > 0 && a.open_print_epoch == a.epoch),
+            NoctisError::AuctionAlreadyPrinted
+        );
+        let epoch = a.epoch;
 
         let notional = (mid as u128)
             .checked_mul(qty_micro as u128).ok_or(NoctisError::MathOverflow)?
@@ -241,6 +262,8 @@ pub mod noctis {
 
         ctx.accounts.vault.receipts_opened = ctx.accounts.vault.receipts_opened
             .checked_add(1).ok_or(NoctisError::MathOverflow)?;
+        ctx.accounts.asset.open_receipts = ctx.accounts.asset.open_receipts
+            .checked_add(1).ok_or(NoctisError::MathOverflow)?;
 
         let r = &mut ctx.accounts.receipt;
         r.owner = ctx.accounts.trader.key();
@@ -252,6 +275,7 @@ pub mod noctis {
         r.tier = tier as u8;
         r.premium = premium;
         r.capital_at_risk = capital_at_risk;
+        r.epoch = epoch;
         r.opened_at = now;
         r.settled = false;
         r.bump = ctx.bumps.receipt;
@@ -269,9 +293,10 @@ pub mod noctis {
         require!(open_print > 0, NoctisError::BadMark);
         let a = &mut ctx.accounts.asset;
         a.open_print = open_print;
+        a.open_print_epoch = a.epoch;
         a.last_close = open_print;
         a.session = Session::Regular as u8;
-        emit!(OpenPrintPosted { mint: a.mint, open_print });
+        emit!(OpenPrintPosted { mint: a.mint, open_print, epoch: a.epoch });
         Ok(())
     }
 
@@ -289,6 +314,8 @@ pub mod noctis {
         let r = &ctx.accounts.receipt;
         require!(!r.settled, NoctisError::AlreadySettled);
         require_keys_eq!(r.asset, asset_key, NoctisError::WrongAsset);
+        // The print on the account must be the one from THIS receipt's window.
+        require!(r.epoch == a.open_print_epoch, NoctisError::WrongEpoch);
 
         let tier = Tier::from_u8(r.tier).ok_or(NoctisError::BadTier)?;
         let payout = settlement_payout(
@@ -328,6 +355,7 @@ pub mod noctis {
         });
 
         ctx.accounts.receipt.settled = true;
+        ctx.accounts.asset.open_receipts = ctx.accounts.asset.open_receipts.saturating_sub(1);
         Ok(())
     }
 }
@@ -383,6 +411,17 @@ pub struct AssetMark {
     pub published_at: i64,
     /// Set once the reopening auction prints. Zero while dark.
     pub open_print: u64,
+    /// Monotonic counter for the dark window a receipt belongs to.
+    ///
+    /// Without this, `open_print` from one Monday stays on the account forever and
+    /// the NEXT weekend's receipts settle instantly against a week-old auction —
+    /// pick whichever direction it pays and drain the vault. Receipts carry the
+    /// epoch they were written in and only settle against that epoch's print.
+    pub epoch: u64,
+    /// The epoch `open_print` belongs to.
+    pub open_print_epoch: u64,
+    /// Receipts written in the current epoch that have not settled yet.
+    pub open_receipts: u64,
     pub session: u8,
     pub bump: u8,
 }
@@ -400,6 +439,9 @@ pub struct Receipt {
     pub tier: u8,
     pub premium: u64,
     pub capital_at_risk: u64,
+    /// The dark window this receipt was written in. Must match the epoch the
+    /// opening print belongs to, or settlement is refused.
+    pub epoch: u64,
     pub opened_at: i64,
     pub settled: bool,
     pub bump: u8,
@@ -530,6 +572,7 @@ pub struct OpenPosition<'info> {
     pub config: Account<'info, Config>,
     #[account(mut, seeds = [b"vault"], bump = vault.bump)]
     pub vault: Account<'info, Vault>,
+    #[account(mut)]
     pub asset: Account<'info, AssetMark>,
     #[account(
         init, payer = trader, space = 8 + Receipt::INIT_SPACE,
@@ -568,6 +611,7 @@ pub struct SettleReceipt<'info> {
     pub config: Account<'info, Config>,
     #[account(mut, seeds = [b"vault"], bump = vault.bump)]
     pub vault: Account<'info, Vault>,
+    #[account(mut)]
     pub asset: Account<'info, AssetMark>,
     #[account(mut, has_one = owner)]
     pub receipt: Account<'info, Receipt>,
@@ -603,6 +647,7 @@ pub struct MarkPublished {
     pub mid: u64,
     pub sigma_ppm: u32,
     pub session: u8,
+    pub epoch: u64,
     pub ts: i64,
 }
 
@@ -623,6 +668,7 @@ pub struct PositionOpened {
 pub struct OpenPrintPosted {
     pub mint: Pubkey,
     pub open_print: u64,
+    pub epoch: u64,
 }
 
 #[event]
@@ -668,6 +714,12 @@ pub enum NoctisError {
     AlreadySettled,
     #[msg("Reopening auction has not printed yet")]
     NoOpenPrint,
+    #[msg("Receipt belongs to a different dark window than the posted opening print")]
+    WrongEpoch,
+    #[msg("This window's auction has already printed; there is nothing left to insure")]
+    AuctionAlreadyPrinted,
+    #[msg("Receipts from the current window are still unsettled")]
+    SettlementPending,
     #[msg("Receipt does not belong to this asset")]
     WrongAsset,
     #[msg("Arithmetic overflow")]
