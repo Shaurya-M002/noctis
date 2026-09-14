@@ -51,12 +51,15 @@ npm run test:program    # throwaway validator, deploy, 18 lifecycle tests
 
 ## Why the binary is 292 KB
 
-Mostly Token-2022. xStocks mints are owned by the Token-2022 program and carry the
-ScaledUiAmount extension — that is how a stock split or dividend is applied, by
-moving a multiplier rather than rebasing every balance. So the program is written
-against `anchor_spl::token_interface`, and that dependency is roughly a third of
-the binary. Building against the classic SPL token interface would be a lot smaller
-and could not hold the asset.
+Mostly `anchor-lang` itself. We assumed it was Token-2022 support and built it both
+ways to check: dropping `token_interface` for classic `anchor_spl::token` saves
+**10 KB**, about 0.05 SOL of rent. Not the third we expected.
+
+Worth knowing what the 10 KB buys, though. This program never moves an xStock — the
+cover is parametric, so the payout depends only on the published mark and the
+opening print. The one mint it transfers is the quote asset, today USDC, which is
+classic SPL. `token_interface` is there so the quote asset *could* be PYUSD, which
+is Token-2022. That is the whole reason, and it is cheap enough to keep.
 
 The rest is squeezed: `opt-level = "z"`, fat LTO, one codegen unit, `panic = abort`,
 symbols stripped, and `--features no-idl` (the IDL is still emitted to

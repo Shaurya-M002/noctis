@@ -16,18 +16,23 @@
 //! own uncertainty estimates are honest.
 
 use anchor_lang::prelude::*;
-// `token_interface`, not `token`, and that is not a style choice.
+// `token_interface` rather than `token`, and the reason is not the obvious one.
 //
-// xStocks mints are owned by TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb -- the
-// Token-2022 program -- and their mint accounts are ~678 bytes rather than the
-// classic 82, because they carry extensions. Specifically ScaledUiAmount, which is
-// how a stock split or a dividend is applied to every holder at once by moving a
-// multiplier instead of rebasing balances.
+// The obvious reason would be that xStocks are Token-2022 -- they are, owned by
+// TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb, ~678 bytes against the classic 82,
+// carrying the ScaledUiAmount extension that applies splits and dividends by moving
+// a multiplier instead of rebasing balances. An earlier version of this comment
+// said exactly that, and it was wrong.
 //
-// A program written against the classic SPL token interface simply cannot hold or
-// move these. It also costs us: Token-2022 support is the single largest
-// contributor to the deployed binary, and dropping it would take roughly a third
-// off the rent. It is not optional for this asset.
+// This program never moves an xStock. The cover is PARAMETRIC: the payout is a
+// function of the published mark and the official opening print, and nothing else.
+// The only mint it transfers is the quote asset, and the xStock mint appears once,
+// as a PDA seed in `register_asset`.
+//
+// The real reason is the quote asset. Today that is USDC, which is classic SPL.
+// PYUSD is Token-2022. Supporting either costs about 10 KB of binary -- measured,
+// by building it both ways -- which is roughly 0.05 SOL of deploy rent. Cheap
+// enough for the option.
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 pub mod math;
