@@ -1,0 +1,38 @@
+{
+  "name": "noctis",
+  "version": "1.0.0",
+  "description": "Fair value and reopen assurance for tokenized equities while the primary venue is shut",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "npm --prefix app run dev",
+    "build": "npm --prefix app run build",
+    "backtest": "tsx engine/backtest.ts",
+    "test:math": "cargo test -p noctis --lib",
+    "test:program": "./scripts/localnet-test.sh",
+    "build:program": "cargo-build-sbf --tools-version v1.52 && anchor idl build -o target/idl/noctis.json -t target/types/noctis.ts",
+    "shots": "node scripts/shots.mjs",
+    "record": "node scripts/record-demo.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.5.1",
+    "chai": "^6.2.2",
+    "mocha": "^11.8.0",
+    "playwright": "^1.63.0",
+    "ts-mocha": "^11.1.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  },
+  "private": true
+}

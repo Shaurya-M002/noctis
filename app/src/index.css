@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void:      #08090c;
+  --color-surface:   #0b0d11;
+  --color-panel:     #11141a;
+  --color-raised:    #171b23;
+  --color-line:      #20242c;
+  --color-line2:     #2b313c;
+
+  --color-ink:       #e9ecf1;
+  --color-ink2:      #9aa3b2;
+  --color-ink3:      #6b7484;
+
+  /* Validated categorical trio — see docs/DESIGN.md */
+  --color-mark:      #c98500;  /* series 1 — the Noctis mark */
+  --color-tape:      #3987e5;  /* series 2 — on-chain last trade */
+  --color-truth:     #1baf7a;  /* series 3 — latent truth / official open */
+
+  --color-up:        #35c77e;
+  --color-down:      #e66767;
+  --color-warn:      #d98324;
+
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-feature-settings: "cv02","cv03","cv04","ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Faint starfield/grid so the "dark" is a place, not an absence. */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1200px 600px at 78% -10%, rgba(201,133,0,0.07), transparent 62%),
+    radial-gradient(900px 500px at 8% 105%, rgba(57,135,229,0.05), transparent 60%),
+    linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px) 0 0 / 100% 44px,
+    linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px) 0 0 / 44px 100%;
+}
+
+.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+
+.panel {
+  background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.hair { border-color: var(--color-line); }
+
+.chip {
+  font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; border: 1px solid var(--color-line2);
+  color: var(--color-ink2);
+}
+
+@keyframes pulseDark { 0%,100% { opacity: .55 } 50% { opacity: 1 } }
+.pulse { animation: pulseDark 2.4s ease-in-out infinite; }
+
+@keyframes riseIn { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform:none } }
+.rise { animation: riseIn .35s ease-out both; }
+
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track {
+  height: 3px; background: var(--color-line2); border-radius: 999px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; border-radius: 999px; margin-top: -6px;
+  background: var(--color-mark);
+  border: 2px solid var(--color-void);
+  box-shadow: 0 0 0 1px var(--color-mark), 0 0 14px rgba(201,133,0,.55);
+  cursor: grab;
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px }
+::-webkit-scrollbar-thumb { background: var(--color-line2); border-radius: 9px }
+::-webkit-scrollbar-track { background: transparent }

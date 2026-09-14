@@ -1,0 +1,675 @@
+//! # Noctis
+//!
+//! A tokenized equity trades 24/7. Its primary venue prints a price for 32.5 of the
+//! 168 hours in a week. For the other 135.5 — and for the 65.5-hour weekend in
+//! particular — there is no price discovery anywhere on earth, yet the token still
+//! changes hands.
+//!
+//! Noctis publishes a mark for those hours *with its own uncertainty attached*, and
+//! sells a guarantee priced off that uncertainty: if the official reopening print
+//! lands further from your fill than the band you paid to be protected inside, an
+//! underwriting vault makes you whole.
+//!
+//! There is no trading fee and no spread markup anywhere in this program. The only
+//! money that moves besides the trade itself is the premium — and the protocol's
+//! cut is taken from the vault's *net profit*, so Noctis earns nothing unless its
+//! own uncertainty estimates are honest.
+
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
+
+pub mod math;
+use math::{quote_premium, settlement_payout, Premium, Tier};
+
+declare_id!("NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE");
+
+/// A mark older than this is refused for trading. Two minutes of Solana is a long
+/// time to be quoting a stale distribution.
+pub const MAX_MARK_AGE_SECONDS: i64 = 120;
+
+/// Refuse to quote at all beyond this uncertainty. If we do not know the price to
+/// better than 12%, the correct product is silence.
+pub const MAX_SIGMA_PPM: u32 = 120_000;
+
+/// Utilisation ceiling. The vault stops writing before it can be wiped out by one bad open.
+pub const MAX_UTILISATION_PPM: u64 = 850_000;
+
+#[program]
+pub mod noctis {
+    use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>, protocol_take_bps: u16) -> Result<()> {
+        require!(protocol_take_bps <= 2_000, NoctisError::TakeTooHigh);
+        let c = &mut ctx.accounts.config;
+        c.authority = ctx.accounts.authority.key();
+        c.oracle = ctx.accounts.authority.key();
+        c.quote_mint = ctx.accounts.quote_mint.key();
+        c.protocol_take_bps = protocol_take_bps;
+        c.paused = false;
+        c.bump = ctx.bumps.config;
+
+        let v = &mut ctx.accounts.vault;
+        v.bump = ctx.bumps.vault;
+        v.tvl = 0;
+        v.exposure = 0;
+        v.premiums_collected = 0;
+        v.payouts_paid = 0;
+        v.shares = 0;
+        v.receipts_opened = 0;
+        Ok(())
+    }
+
+    pub fn set_oracle(ctx: Context<AdminOnly>, oracle: Pubkey) -> Result<()> {
+        ctx.accounts.config.oracle = oracle;
+        Ok(())
+    }
+
+    pub fn set_paused(ctx: Context<AdminOnly>, paused: bool) -> Result<()> {
+        ctx.accounts.config.paused = paused;
+        Ok(())
+    }
+
+    /// Register an asset the protocol is willing to mark.
+    pub fn register_asset(
+        ctx: Context<RegisterAsset>,
+        last_close: u64,
+        depth: u64,
+    ) -> Result<()> {
+        let a = &mut ctx.accounts.asset;
+        a.mint = ctx.accounts.asset_mint.key();
+        a.last_close = last_close;
+        a.depth = depth;
+        a.mid = last_close;
+        a.sigma_ppm = 0;
+        a.published_at = 0;
+        a.open_print = 0;
+        a.session = Session::Regular as u8;
+        a.bump = ctx.bumps.asset;
+        Ok(())
+    }
+
+    /// Publish a fair value and its 1-sigma uncertainty.
+    ///
+    /// The uncertainty is not decoration. It is the input the premium is computed
+    /// from, so an oracle that understates sigma is underpricing the vault's own
+    /// risk — and the vault is the party that pays for that.
+    pub fn publish_mark(
+        ctx: Context<PublishMark>,
+        mid: u64,
+        sigma_ppm: u32,
+        session: u8,
+    ) -> Result<()> {
+        require!(!ctx.accounts.config.paused, NoctisError::Paused);
+        require!(mid > 0, NoctisError::BadMark);
+        require!(sigma_ppm <= MAX_SIGMA_PPM, NoctisError::SigmaTooWide);
+        require!(session <= Session::Holiday as u8, NoctisError::BadSession);
+
+        let a = &mut ctx.accounts.asset;
+        a.mid = mid;
+        a.sigma_ppm = sigma_ppm;
+        a.session = session;
+        a.published_at = Clock::get()?.unix_timestamp;
+
+        emit!(MarkPublished { mint: a.mint, mid, sigma_ppm, session, ts: a.published_at });
+        Ok(())
+    }
+
+    /// Underwrite. LPs are short the gap; they are paid for it in premiums.
+    pub fn deposit(ctx: Context<VaultFlow>, amount: u64) -> Result<()> {
+        require!(amount > 0, NoctisError::ZeroAmount);
+        let v = &ctx.accounts.vault;
+
+        // Shares are struck against current TVL so a depositor cannot buy into
+        // premiums already earned or dodge payouts already owed.
+        let shares = if v.shares == 0 || v.tvl == 0 {
+            amount
+        } else {
+            (amount as u128)
+                .checked_mul(v.shares as u128).ok_or(NoctisError::MathOverflow)?
+                .checked_div(v.tvl as u128).ok_or(NoctisError::MathOverflow)? as u64
+        };
+
+        let decimals = ctx.accounts.quote_mint.decimals;
+        token_interface::transfer_checked(
+            ctx.accounts.transfer_in_ctx(),
+            amount,
+            decimals,
+        )?;
+
+        let v = &mut ctx.accounts.vault;
+        v.tvl = v.tvl.checked_add(amount).ok_or(NoctisError::MathOverflow)?;
+        v.shares = v.shares.checked_add(shares).ok_or(NoctisError::MathOverflow)?;
+
+        let p = &mut ctx.accounts.position;
+        p.owner = ctx.accounts.lp.key();
+        p.shares = p.shares.checked_add(shares).ok_or(NoctisError::MathOverflow)?;
+        p.bump = ctx.bumps.position;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<VaultFlow>, shares: u64) -> Result<()> {
+        require!(
+            shares > 0 && shares <= ctx.accounts.position.shares,
+            NoctisError::InsufficientShares
+        );
+
+        let v = &mut ctx.accounts.vault;
+        let amount = (shares as u128)
+            .checked_mul(v.tvl as u128).ok_or(NoctisError::MathOverflow)?
+            .checked_div(v.shares as u128).ok_or(NoctisError::MathOverflow)? as u64;
+
+        // Capital backing live receipts cannot walk out of the door.
+        let free = v.tvl.saturating_sub(v.exposure);
+        require!(amount <= free, NoctisError::CapitalLocked);
+
+        v.tvl -= amount;
+        v.shares -= shares;
+        ctx.accounts.position.shares -= shares;
+
+        let bump = [ctx.accounts.vault.bump];
+        let seeds: &[&[u8]] = &[b"vault", &bump];
+        let decimals = ctx.accounts.quote_mint.decimals;
+        token_interface::transfer_checked(
+            ctx.accounts.transfer_out_ctx().with_signer(&[seeds]),
+            amount,
+            decimals,
+        )?;
+        Ok(())
+    }
+
+    /// Buy or sell at the published mark, optionally buying assurance on the reopen.
+    ///
+    /// `qty_micro` is 1e6-scaled units of the tokenized equity. The fill price is the
+    /// mark, exactly — there is no spread, and the client is shown the same premium
+    /// this instruction recomputes.
+    pub fn open_position(
+        ctx: Context<OpenPosition>,
+        qty_micro: u64,
+        is_buy: bool,
+        tier: u8,
+        max_premium: u64,
+    ) -> Result<()> {
+        let cfg = &ctx.accounts.config;
+        require!(!cfg.paused, NoctisError::Paused);
+
+        let tier = Tier::from_u8(tier).ok_or(NoctisError::BadTier)?;
+        let a = &ctx.accounts.asset;
+        let (asset_key, asset_mint, mid, sigma_ppm) = (a.key(), a.mint, a.mid, a.sigma_ppm);
+        let now = Clock::get()?.unix_timestamp;
+        require!(now - a.published_at <= MAX_MARK_AGE_SECONDS, NoctisError::StaleMark);
+        require!(a.sigma_ppm > 0, NoctisError::NoMark);
+
+        let notional = (mid as u128)
+            .checked_mul(qty_micro as u128).ok_or(NoctisError::MathOverflow)?
+            .checked_div(math::PPM).ok_or(NoctisError::MathOverflow)? as u64;
+
+        let (tvl, exposure) = (ctx.accounts.vault.tvl, ctx.accounts.vault.exposure);
+        let Premium { total: premium, capital_at_risk, .. } = quote_premium(
+            notional, sigma_ppm as u64, tier, tvl, exposure, a.depth,
+        ).ok_or(NoctisError::MathOverflow)?;
+
+        // Slippage guard on the *premium*, since that is the only price the user pays.
+        require!(premium <= max_premium, NoctisError::PremiumAboveLimit);
+
+        if tier != Tier::Raw {
+            let new_exposure = exposure
+                .checked_add(capital_at_risk).ok_or(NoctisError::MathOverflow)?;
+            let util = if tvl == 0 {
+                u64::MAX
+            } else {
+                ((new_exposure as u128) * math::PPM / (tvl as u128)) as u64
+            };
+            require!(util <= MAX_UTILISATION_PPM, NoctisError::VaultAtCapacity);
+
+            let decimals = ctx.accounts.quote_mint.decimals;
+            token_interface::transfer_checked(
+                ctx.accounts.premium_transfer_ctx(),
+                premium,
+                decimals,
+            )?;
+
+            let v = &mut ctx.accounts.vault;
+            v.exposure = new_exposure;
+            v.tvl = v.tvl.checked_add(premium).ok_or(NoctisError::MathOverflow)?;
+            v.premiums_collected = v.premiums_collected
+                .checked_add(premium).ok_or(NoctisError::MathOverflow)?;
+        }
+
+        let sigma_abs = (mid as u128)
+            .checked_mul(sigma_ppm as u128).ok_or(NoctisError::MathOverflow)?
+            .checked_div(math::PPM).ok_or(NoctisError::MathOverflow)? as u64;
+
+        ctx.accounts.vault.receipts_opened = ctx.accounts.vault.receipts_opened
+            .checked_add(1).ok_or(NoctisError::MathOverflow)?;
+
+        let r = &mut ctx.accounts.receipt;
+        r.owner = ctx.accounts.trader.key();
+        r.asset = asset_key;
+        r.qty_micro = qty_micro;
+        r.is_buy = is_buy;
+        r.fill_price = mid;
+        r.sigma_abs = sigma_abs;
+        r.tier = tier as u8;
+        r.premium = premium;
+        r.capital_at_risk = capital_at_risk;
+        r.opened_at = now;
+        r.settled = false;
+        r.bump = ctx.bumps.receipt;
+
+        emit!(PositionOpened {
+            receipt: r.key(), owner: r.owner, mint: asset_mint,
+            qty_micro, is_buy, fill_price: mid, sigma_abs,
+            tier: tier as u8, premium,
+        });
+        Ok(())
+    }
+
+    /// The reopening auction happened. Record what it printed.
+    pub fn post_open_print(ctx: Context<PostOpenPrint>, open_print: u64) -> Result<()> {
+        require!(open_print > 0, NoctisError::BadMark);
+        let a = &mut ctx.accounts.asset;
+        a.open_print = open_print;
+        a.last_close = open_print;
+        a.session = Session::Regular as u8;
+        emit!(OpenPrintPosted { mint: a.mint, open_print });
+        Ok(())
+    }
+
+    /// Settle one receipt against the official print.
+    ///
+    /// Permissionless: anyone may crank it, the payout only ever goes to the receipt
+    /// owner's token account.
+    pub fn settle_receipt(ctx: Context<SettleReceipt>) -> Result<()> {
+        let a = &ctx.accounts.asset;
+        require!(a.open_print > 0, NoctisError::NoOpenPrint);
+
+        let open_print = a.open_print;
+        let asset_key = a.key();
+
+        let r = &ctx.accounts.receipt;
+        require!(!r.settled, NoctisError::AlreadySettled);
+        require_keys_eq!(r.asset, asset_key, NoctisError::WrongAsset);
+
+        let tier = Tier::from_u8(r.tier).ok_or(NoctisError::BadTier)?;
+        let payout = settlement_payout(
+            r.is_buy, r.fill_price, open_print, r.sigma_abs, r.qty_micro, tier,
+        ).ok_or(NoctisError::MathOverflow)?;
+        let (receipt_key, receipt_owner, capital_at_risk) =
+            (r.key(), r.owner, r.capital_at_risk);
+
+        let v = &mut ctx.accounts.vault;
+        v.exposure = v.exposure.saturating_sub(capital_at_risk);
+        let payable = payout.min(v.tvl);
+        let vault_bump = v.bump;
+
+        if payable > 0 {
+            // A vault that cannot pay in full pays what it has and says so, rather
+            // than reverting and stranding every other receipt behind it.
+            v.tvl -= payable;
+            v.payouts_paid = v.payouts_paid
+                .checked_add(payable).ok_or(NoctisError::MathOverflow)?;
+
+            let decimals = ctx.accounts.quote_mint.decimals;
+            let bump = [vault_bump];
+            let seeds: &[&[u8]] = &[b"vault", &bump];
+            token_interface::transfer_checked(
+                ctx.accounts.payout_ctx().with_signer(&[seeds]),
+                payable,
+                decimals,
+            )?;
+        }
+
+        emit!(ReceiptSettled {
+            receipt: receipt_key,
+            owner: receipt_owner,
+            open_print,
+            payout: payable,
+            shortfall: payout - payable,
+        });
+
+        ctx.accounts.receipt.settled = true;
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------- state
+
+#[account]
+#[derive(InitSpace)]
+pub struct Config {
+    pub authority: Pubkey,
+    pub oracle: Pubkey,
+    pub quote_mint: Pubkey,
+    /// Protocol's share of vault NET PROFIT, in bps. Never a fee on volume.
+    pub protocol_take_bps: u16,
+    pub paused: bool,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct Vault {
+    pub tvl: u64,
+    pub exposure: u64,
+    pub premiums_collected: u64,
+    pub payouts_paid: u64,
+    pub shares: u64,
+    /// Monotonic receipt counter. Seeds the receipt PDA, so two fee-free trades by
+    /// the same trader on the same asset cannot collide.
+    pub receipts_opened: u64,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct LpPosition {
+    pub owner: Pubkey,
+    pub shares: u64,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct AssetMark {
+    pub mint: Pubkey,
+    /// Last official regular-session close, micro-USD.
+    pub last_close: u64,
+    /// Fair value for right now, micro-USD.
+    pub mid: u64,
+    /// 1-sigma uncertainty of the reopening gap, PPM.
+    pub sigma_ppm: u32,
+    /// On-chain depth used for the concentration load, micro-USDC.
+    pub depth: u64,
+    pub published_at: i64,
+    /// Set once the reopening auction prints. Zero while dark.
+    pub open_print: u64,
+    pub session: u8,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct Receipt {
+    pub owner: Pubkey,
+    pub asset: Pubkey,
+    pub qty_micro: u64,
+    pub is_buy: bool,
+    pub fill_price: u64,
+    /// Frozen at trade time — the band the user was quoted is the band they get.
+    pub sigma_abs: u64,
+    pub tier: u8,
+    pub premium: u64,
+    pub capital_at_risk: u64,
+    pub opened_at: i64,
+    pub settled: bool,
+    pub bump: u8,
+}
+
+#[repr(u8)]
+pub enum Session {
+    Regular = 0,
+    PreMarket = 1,
+    AfterHours = 2,
+    Overnight = 3,
+    Weekend = 4,
+    Holiday = 5,
+}
+
+// ---------------------------------------------------------------- contexts
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        init, payer = authority, space = 8 + Config::INIT_SPACE,
+        seeds = [b"config"], bump
+    )]
+    pub config: Account<'info, Config>,
+    #[account(
+        init, payer = authority, space = 8 + Vault::INIT_SPACE,
+        seeds = [b"vault"], bump
+    )]
+    pub vault: Account<'info, Vault>,
+    pub quote_mint: InterfaceAccount<'info, Mint>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AdminOnly<'info> {
+    #[account(mut, seeds = [b"config"], bump = config.bump, has_one = authority)]
+    pub config: Account<'info, Config>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct RegisterAsset<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, has_one = authority)]
+    pub config: Account<'info, Config>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub asset_mint: InterfaceAccount<'info, Mint>,
+    #[account(
+        init, payer = authority, space = 8 + AssetMark::INIT_SPACE,
+        seeds = [b"asset", asset_mint.key().as_ref()], bump
+    )]
+    pub asset: Account<'info, AssetMark>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct PublishMark<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, has_one = oracle)]
+    pub config: Account<'info, Config>,
+    pub oracle: Signer<'info>,
+    #[account(mut)]
+    pub asset: Account<'info, AssetMark>,
+}
+
+#[derive(Accounts)]
+pub struct PostOpenPrint<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, has_one = oracle)]
+    pub config: Account<'info, Config>,
+    pub oracle: Signer<'info>,
+    #[account(mut)]
+    pub asset: Account<'info, AssetMark>,
+}
+
+#[derive(Accounts)]
+pub struct VaultFlow<'info> {
+    #[account(mut)]
+    pub lp: Signer<'info>,
+    #[account(seeds = [b"config"], bump = config.bump, has_one = quote_mint)]
+    pub config: Account<'info, Config>,
+    #[account(mut, seeds = [b"vault"], bump = vault.bump)]
+    pub vault: Account<'info, Vault>,
+    #[account(
+        init_if_needed, payer = lp, space = 8 + LpPosition::INIT_SPACE,
+        seeds = [b"lp", lp.key().as_ref()], bump
+    )]
+    pub position: Account<'info, LpPosition>,
+    pub quote_mint: InterfaceAccount<'info, Mint>,
+    #[account(mut, token::mint = quote_mint, token::authority = lp)]
+    pub lp_quote: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut, token::mint = quote_mint, token::authority = vault)]
+    pub vault_quote: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> VaultFlow<'info> {
+    fn transfer_in_ctx(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            TransferChecked {
+                from: self.lp_quote.to_account_info(),
+                mint: self.quote_mint.to_account_info(),
+                to: self.vault_quote.to_account_info(),
+                authority: self.lp.to_account_info(),
+            },
+        )
+    }
+    fn transfer_out_ctx(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            TransferChecked {
+                from: self.vault_quote.to_account_info(),
+                mint: self.quote_mint.to_account_info(),
+                to: self.lp_quote.to_account_info(),
+                authority: self.vault.to_account_info(),
+            },
+        )
+    }
+}
+
+#[derive(Accounts)]
+pub struct OpenPosition<'info> {
+    #[account(mut)]
+    pub trader: Signer<'info>,
+    #[account(seeds = [b"config"], bump = config.bump, has_one = quote_mint)]
+    pub config: Account<'info, Config>,
+    #[account(mut, seeds = [b"vault"], bump = vault.bump)]
+    pub vault: Account<'info, Vault>,
+    pub asset: Account<'info, AssetMark>,
+    #[account(
+        init, payer = trader, space = 8 + Receipt::INIT_SPACE,
+        seeds = [b"receipt", trader.key().as_ref(), asset.key().as_ref(), &vault.receipts_opened.to_le_bytes()],
+        bump
+    )]
+    pub receipt: Account<'info, Receipt>,
+    pub quote_mint: InterfaceAccount<'info, Mint>,
+    #[account(mut, token::mint = quote_mint, token::authority = trader)]
+    pub trader_quote: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut, token::mint = quote_mint, token::authority = vault)]
+    pub vault_quote: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> OpenPosition<'info> {
+    fn premium_transfer_ctx(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            TransferChecked {
+                from: self.trader_quote.to_account_info(),
+                mint: self.quote_mint.to_account_info(),
+                to: self.vault_quote.to_account_info(),
+                authority: self.trader.to_account_info(),
+            },
+        )
+    }
+}
+
+#[derive(Accounts)]
+pub struct SettleReceipt<'info> {
+    /// Permissionless crank.
+    pub cranker: Signer<'info>,
+    #[account(seeds = [b"config"], bump = config.bump, has_one = quote_mint)]
+    pub config: Account<'info, Config>,
+    #[account(mut, seeds = [b"vault"], bump = vault.bump)]
+    pub vault: Account<'info, Vault>,
+    pub asset: Account<'info, AssetMark>,
+    #[account(mut, has_one = owner)]
+    pub receipt: Account<'info, Receipt>,
+    /// CHECK: only used to key the payout token account.
+    pub owner: UncheckedAccount<'info>,
+    pub quote_mint: InterfaceAccount<'info, Mint>,
+    #[account(mut, token::mint = quote_mint, token::authority = owner)]
+    pub owner_quote: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut, token::mint = quote_mint, token::authority = vault)]
+    pub vault_quote: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+impl<'info> SettleReceipt<'info> {
+    fn payout_ctx(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            TransferChecked {
+                from: self.vault_quote.to_account_info(),
+                mint: self.quote_mint.to_account_info(),
+                to: self.owner_quote.to_account_info(),
+                authority: self.vault.to_account_info(),
+            },
+        )
+    }
+}
+
+// ---------------------------------------------------------------- events
+
+#[event]
+pub struct MarkPublished {
+    pub mint: Pubkey,
+    pub mid: u64,
+    pub sigma_ppm: u32,
+    pub session: u8,
+    pub ts: i64,
+}
+
+#[event]
+pub struct PositionOpened {
+    pub receipt: Pubkey,
+    pub owner: Pubkey,
+    pub mint: Pubkey,
+    pub qty_micro: u64,
+    pub is_buy: bool,
+    pub fill_price: u64,
+    pub sigma_abs: u64,
+    pub tier: u8,
+    pub premium: u64,
+}
+
+#[event]
+pub struct OpenPrintPosted {
+    pub mint: Pubkey,
+    pub open_print: u64,
+}
+
+#[event]
+pub struct ReceiptSettled {
+    pub receipt: Pubkey,
+    pub owner: Pubkey,
+    pub open_print: u64,
+    pub payout: u64,
+    pub shortfall: u64,
+}
+
+// ---------------------------------------------------------------- errors
+
+#[error_code]
+pub enum NoctisError {
+    #[msg("Protocol take is capped at 20% of net profit")]
+    TakeTooHigh,
+    #[msg("Protocol is paused")]
+    Paused,
+    #[msg("Mark must be positive")]
+    BadMark,
+    #[msg("Uncertainty exceeds the ceiling — refusing to quote")]
+    SigmaTooWide,
+    #[msg("Unknown session code")]
+    BadSession,
+    #[msg("No mark has been published for this asset")]
+    NoMark,
+    #[msg("Mark is stale")]
+    StaleMark,
+    #[msg("Unknown assurance tier")]
+    BadTier,
+    #[msg("Premium exceeds the caller's limit")]
+    PremiumAboveLimit,
+    #[msg("Vault is at its utilisation ceiling")]
+    VaultAtCapacity,
+    #[msg("Amount must be non-zero")]
+    ZeroAmount,
+    #[msg("Not enough LP shares")]
+    InsufficientShares,
+    #[msg("Capital is backing live receipts and cannot be withdrawn")]
+    CapitalLocked,
+    #[msg("Receipt already settled")]
+    AlreadySettled,
+    #[msg("Reopening auction has not printed yet")]
+    NoOpenPrint,
+    #[msg("Receipt does not belong to this asset")]
+    WrongAsset,
+    #[msg("Arithmetic overflow")]
+    MathOverflow,
+}

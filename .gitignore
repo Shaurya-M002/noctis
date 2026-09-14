@@ -1,0 +1,9 @@
+node_modules/
+dist/
+target/
+.anchor/
+.keys/
+test-ledger/
+.DS_Store
+*.log
+media/*.webm
