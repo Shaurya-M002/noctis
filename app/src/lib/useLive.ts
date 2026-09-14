@@ -103,7 +103,14 @@ export function useLive(enabled: boolean, sym: string): LiveState {
     return UNIVERSE.map((a) => {
       const l = snap.assets[a.sym];
       if (!l) return a;
-      return { ...a, close: l.reference, depth: Math.max(20_000, l.liquidity) };
+      return {
+        ...a,
+        close: l.reference,
+        depth: Math.max(20_000, l.liquidity),
+        // The universe's earnings dates are demo data. Live mode has no calendar
+        // feed, so say "unknown" rather than assert a date we did not look up.
+        earningsInDays: -1,
+      };
     });
   }, [snap]);
 

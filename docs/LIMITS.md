@@ -66,9 +66,16 @@ Written before anyone asks.
 
 ## Known imperfections we chose to leave visible
 
-- σ runs **wide** at 1σ (73.5% coverage vs a 68.3% target). Band buyers pay a
-  little more than fair. We would rather ship that and say so than tune the
-  coverage number until the screenshot looks perfect.
+- **The t(4) fit is an inference from two numbers, not a proof.** 76.1% / 95.8%
+  coverage matches a standardised t(4) (77.0% / 95.3%) far better than a normal,
+  and we reprice on that — which lowered premiums. But two coverage points do not
+  identify a distribution, and the degrees of freedom are almost certainly not
+  constant across names or regimes. A real version fits ν per asset, rolling, and
+  probably finds NVDA on an earnings night is nothing like SPY on a quiet Sunday.
+- **The synthetic world's tails are our own construction.** We measured t(4)
+  against gaps produced by our scenario jitter. That the fit is this clean is
+  partly a statement about our generator. Replaying real Friday→Monday gaps is the
+  only way to know, and it is the top of the next-steps list.
 - The backtest's scenario jitter is our invention. It is a reasonable
   vol-of-vol process, but it is not a historical gap distribution. The honest
   next step is replaying real Friday-close → Monday-open gaps.

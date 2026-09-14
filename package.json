@@ -14,7 +14,11 @@
     "test:program": "./scripts/localnet-test.sh",
     "build:program": "cargo-build-sbf --tools-version v1.52 && anchor idl build -o target/idl/noctis.json -t target/types/noctis.ts",
     "shots": "node scripts/shots.mjs",
-    "record": "node scripts/record-demo.mjs"
+    "record": "node scripts/record-demo.mjs",
+    "forecast": "tsx engine/forecast.ts report",
+    "forecast:record": "tsx engine/forecast.ts record",
+    "forecast:score": "tsx engine/forecast.ts score",
+    "test:all": "cargo test -p noctis --lib && ./scripts/localnet-test.sh && tsx engine/backtest.ts 800 BAND"
   },
   "keywords": [],
   "author": "",

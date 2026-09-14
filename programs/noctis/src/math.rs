@@ -9,13 +9,23 @@
 
 pub const PPM: u128 = 1_000_000;
 
-/// E[(Z - k)^+] for Z ~ N(0,1), in PPM.
+/// E[(Z - k)^+] in PPM, under a Student-t with 4 degrees of freedom standardised
+/// to unit variance.
 ///
-/// The tier set is fixed, so these are constants rather than an on-chain erf.
-///   k = 0  -> phi(0)                     = 0.3989423
-///   k = 1  -> phi(1) - (1 - Phi(1))      = 0.2419707 - 0.1586553 = 0.0833155
-pub const COEF_PIN: u128 = 398_942; // k = 0
-pub const COEF_BAND: u128 = 83_315; // k = 1
+/// Not the Gaussian, and not a guess. `engine/backtest.ts` measures 76.1% of
+/// opening prints inside +/-1 sigma and 95.8% inside +/-2, against 68.3% / 95.4%
+/// for a normal and 76.98% / 95.26% for a standardised t(4). The overnight gap
+/// distribution is peaked and fat-tailed and this is the shape it has.
+///
+/// At these strikes the taller peak beats the fatter tail, so the honest price is
+/// LOWER than the Gaussian one:
+///   k = 0  -> 0.353549   (Gaussian 0.398942, 0.886x)
+///   k = 1  -> 0.077346   (Gaussian 0.083315, 0.928x)
+///
+/// The tier set is fixed, so these stay constants rather than an on-chain erf.
+/// Mirrored by `PE_T4` in `app/src/lib/pricing.ts`.
+pub const COEF_PIN: u128 = 353_549; // k = 0
+pub const COEF_BAND: u128 = 77_346; // k = 1
 
 /// The three assurance tiers. `k` is the deductible in whole sigma.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -193,12 +203,14 @@ mod tests {
     const M: u64 = 1_000_000;
 
     #[test]
-    fn pin_is_the_half_straddle() {
+    fn pin_prices_the_measured_distribution_not_a_gaussian() {
         // $100k notional, sigma 2%, empty vault, deep book.
         let p = quote_premium(100_000 * M, 20_000, Tier::Pin, 10_000_000 * M, 0, 10_000_000 * M)
             .unwrap();
-        // fair = 100_000 * 0.02 * 0.398942 = 797.884
-        assert_eq!(p.fair, 797_884_000);
+        // fair = 100_000 * 0.02 * 0.353549 = 707.098
+        assert_eq!(p.fair, 707_098_000);
+        // Materially cheaper than the Gaussian half-straddle (797.884) it replaced.
+        assert!(p.fair < 797_884_000);
         // No utilisation, negligible concentration.
         assert!(p.total >= p.fair);
         assert!(p.total < p.fair * 2);
@@ -209,7 +221,7 @@ mod tests {
         let args = (100_000 * M, 20_000, 10_000_000 * M, 0u64, 10_000_000 * M);
         let pin = quote_premium(args.0, args.1, Tier::Pin, args.2, args.3, args.4).unwrap();
         let band = quote_premium(args.0, args.1, Tier::Band, args.2, args.3, args.4).unwrap();
-        // 0.0833155 / 0.3989423 ~= 0.2088
+        // 0.077346 / 0.353549 ~= 0.2188
         assert!(band.total * 4 < pin.total);
         assert!(band.total * 5 > pin.total);
     }

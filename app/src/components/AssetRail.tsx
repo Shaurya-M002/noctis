@@ -35,7 +35,7 @@ export function AssetRail({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className={`text-[13px] font-medium ${sel ? 'text-mark' : 'text-ink'}`}>{a.sym}</span>
-                {a.earningsInDays <= 3 && (
+                {a.earningsInDays >= 0 && a.earningsInDays <= 3 && (
                   <span className="rounded border border-warn/40 px-1 text-[9px] uppercase tracking-wider text-warn">
                     ER {a.earningsInDays}d
                   </span>

@@ -80,8 +80,16 @@ remaining path unaccounted for.
 
 Leaving this out was a real bug in an earlier version of this repo: 1σ coverage
 came out at 65.6% and weekend gaps blew straight through the band, because the
-model was confidently answering the wrong question. Adding it moved coverage to
-73.5% and 2σ coverage from 87.1% to 94.2%.
+model was confidently answering the wrong question.
+
+It had a second, subtler form. `informationHours` was applied as a *flat* weight
+taken from whichever session happened to be current — so at Monday noon, with the
+next bell 21 hours away, the `regular` weight of 1.0 counted 21 calendar hours as
+21 trading hours and σ came out at 3% for AAPL while Nasdaq was actively printing
+it. The live forecast tool surfaced that within a minute of being pointed at a
+weekday. Both windows, elapsed and remaining, are now **integrated** hour by hour
+via `informationHoursAhead` — and `world.ts` generates its latent paths on the same
+integrated clock, so the backtest is not scoring the model against a straw man.
 
 It also gives σ the right *shape*: widest in the middle of the weekend — far from
 the last real price and still far from the next one — narrowing as Monday

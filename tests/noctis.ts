@@ -212,10 +212,14 @@ describe('noctis', () => {
     const before = (await getAccount(provider.connection, traderQuote)).amount;
 
     // 50 AAPLx at 230.96 = $11,548 notional, sigma 0.79%.
-    //   fair      = 11548.00 * 0.0079 * 0.398942 = $36.397
+    //   fair      = 11548.00 * 0.0079 * 0.353549 = $32.257
     //   util load = 0 (vault is empty of exposure)
-    //   size load = fair * 1.2 * 11548/240000 = fair * 0.05774 = $2.101
-    //   total     ~ $38.50
+    //   size load = fair * 1.2 * 11548/240000 = fair * 0.05774 = $1.862
+    //   total     ~ $34.12
+    //
+    // The coefficient is the standardised t(4) partial expectation, not the
+    // Gaussian 0.398942. Measuring the gap distribution instead of assuming it
+    // took ~11% off this number; see docs/PRICING.md.
     await program.methods.openPosition(u64(50 * M), true, 2, u64(50 * M))
       .accountsPartial({
         trader: trader.publicKey, config, vault, asset, quoteMint: usdc,
@@ -230,9 +234,11 @@ describe('noctis', () => {
     const r = await program.account.receipt.fetch(pinReceipt);
     assert.equal(r.premium.toNumber(), pinPremium, 'receipt must record what was charged');
     assert.equal(r.fillPrice.toNumber(), 230_960_000, 'filled at the mark, no spread');
-    assert.closeTo(pinPremium / M, 38.50, 0.5);
-    // 33 bps of notional for total certainty across a 65-hour weekend.
-    assert.closeTo((pinPremium / (11_548 * M)) * 10_000, 33.3, 1.5);
+    assert.closeTo(pinPremium / M, 34.12, 0.5);
+    // ~30 bps of notional for total certainty across a 65-hour weekend.
+    assert.closeTo((pinPremium / (11_548 * M)) * 10_000, 29.5, 1.5);
+    // And strictly cheaper than the Gaussian price it replaced.
+    assert.isBelow(pinPremium / M, 38.5);
   });
 
   it('honours the caller premium limit', async () => {
@@ -286,7 +292,7 @@ describe('noctis', () => {
     const payout = Number(after - before);
     assert.equal(payout, 333 * M);
 
-    // The trader paid $38.50 to avoid a $333 loss.
+    // The trader paid ~$34 to avoid a $333 loss.
     assert.isAbove(payout, pinPremium * 8);
 
     const r = await program.account.receipt.fetch(pinReceipt);

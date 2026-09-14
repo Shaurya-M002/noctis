@@ -6,3 +6,11 @@ resolver = "2"
 overflow-checks = true
 lto = "fat"
 codegen-units = 1
+# Deploy rent is ~6960 lamports per byte, so binary size is a real cost the
+# operator pays. Optimising for size over speed costs nothing here: this program
+# does a handful of integer ops per instruction and is nowhere near the compute
+# budget.
+opt-level = "z"
+panic = "abort"
+strip = true
+incremental = false

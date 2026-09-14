@@ -15,6 +15,8 @@ export type SessionKind =
   | 'holiday';     // Market holiday. Same as weekend.
 
 export interface SessionState {
+  /** Wall-clock instant this session was evaluated at, ms since epoch. */
+  nowMs: number;
   kind: SessionKind;
   label: string;
   /** Hours since the last regular-session close. */
@@ -112,6 +114,26 @@ function boundaries(now: Date) {
   return { lastClose, nextOpen };
 }
 
+/**
+ * Just the session kind, without the expensive part.
+ *
+ * `sessionAt` binary-searches for the surrounding open/close instants, which costs
+ * ~48 `Intl.DateTimeFormat` calls. `informationHoursAhead` walks a 65-hour window
+ * and only ever needs the kind, so doing it the expensive way made an 800-night
+ * backtest take minutes. The kind needs one clock read and a holiday lookup.
+ */
+export function sessionKindAt(ms: number): SessionKind {
+  const p = nyParts(new Date(ms));
+  const mins = p.hour * 60 + p.minute;
+  if (!isTradingDay(p.dateISO, p.weekday)) {
+    return HOLIDAYS_2026.has(p.dateISO) ? 'holiday' : 'weekend';
+  }
+  if (mins >= 570 && mins < 960) return 'regular';
+  if (mins >= 240 && mins < 570) return 'premarket';
+  if (mins >= 960 && mins < 1200) return 'afterhours';
+  return p.weekday === 'Fri' ? 'weekend' : 'overnight';
+}
+
 export function sessionAt(now: Date): SessionState {
   const p = nyParts(now);
   const trading = isTradingDay(p.dateISO, p.weekday);
@@ -142,6 +164,7 @@ export function sessionAt(now: Date): SessionState {
   };
 
   return {
+    nowMs: now.getTime(),
     kind,
     label: LABEL[kind],
     hoursClosed,
@@ -153,6 +176,11 @@ export function sessionAt(now: Date): SessionState {
   };
 }
 
+const WEIGHT: Record<SessionKind, number> = {
+  regular: 1.0, premarket: 0.55, afterhours: 0.45,
+  overnight: 0.30, weekend: 0.12, holiday: 0.12,
+};
+
 /**
  * "Trading-hour equivalents" elapsed since close. Information does not arrive at a
  * constant rate: an hour of a Tokyo session carries more than an hour of a US Sunday
@@ -160,11 +188,30 @@ export function sessionAt(now: Date): SessionState {
  * absurdly across a 62-hour weekend.
  */
 export function informationHours(hoursClosed: number, kind: SessionKind): number {
-  const WEIGHT: Record<SessionKind, number> = {
-    regular: 1.0, premarket: 0.55, afterhours: 0.45,
-    overnight: 0.30, weekend: 0.12, holiday: 0.12,
-  };
   return hoursClosed * WEIGHT[kind];
+}
+
+/**
+ * Information time between now and the next opening bell, INTEGRATED.
+ *
+ * Applying the current session's weight to the whole remaining window is wrong and
+ * badly so. At Monday noon the next bell is ~21 hours away; almost all of that is
+ * overnight, but the current session is `regular`, so a flat weight of 1.0 counts
+ * 21 calendar hours as 21 trading hours — three days of information — and sigma
+ * comes out at 3% for AAPL while Nasdaq is actively printing it.
+ *
+ * Walk the window instead and sum the weight of whatever session each hour
+ * actually falls in.
+ */
+export function informationHoursAhead(nowMs: number, hoursToOpen: number): number {
+  if (hoursToOpen <= 0) return 0;
+  const STEP = 0.5;
+  let total = 0;
+  for (let h = 0; h < hoursToOpen; h += STEP) {
+    const slice = Math.min(STEP, hoursToOpen - h);
+    total += slice * WEIGHT[sessionKindAt(nowMs + h * MS_H)];
+  }
+  return total;
 }
 
 export function fmtDuration(hours: number): string {

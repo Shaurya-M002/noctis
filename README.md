@@ -1,6 +1,6 @@
 <h1>Noctis</h1>
 
-**Fair value, and a price for being wrong about it, during the 135 hours a week nobody is printing US equities.**
+**The fair-value layer for the 135 hours a week US equities aren't priced — published with an error bar you can buy insurance against.**
 
 Stocklana hackathon submission · Solana Foundation · September 2026
 
@@ -144,35 +144,66 @@ the latent path it is scored against.
 $ npx tsx engine/backtest.ts 800 BAND
 
   Predicting the official opening print (RMSE, lower is better)
-    Noctis mark                   3.580%  ██████████████
-    Last official close           8.473%  ██████████████████████████████████
-    Thin 24/7 book last trade     5.008%  ████████████████████
-                                          → Noctis is 57.7% better than doing nothing
+    Noctis mark                   4.018%  ██████████████
+    Last official close           9.428%  ██████████████████████████████████
+    Thin 24/7 book last trade     5.151%  ███████████████████
+                                          → Noctis is 57.4% better than doing nothing
 
   Is sigma honest?
-    inside ±1σ     73.5%   (a calibrated model gives 68.3%)
-    inside ±2σ     94.2%   (a calibrated model gives 95.4%)
+    target depends on the SHAPE of the gap distribution, not just its width:
+    inside ±1σ     76.1%    normal 68.3%  ·  standardised t(4) 77.0%
+    inside ±2σ     95.8%    normal 95.4%  ·  standardised t(4) 95.3%
+    → the gap is peaked and fat-tailed. Premiums are priced off t(4),
+      which at these strikes is CHEAPER than the Gaussian, not dearer.
 
   Underwriting book
-    premiums written       $539,724
-    claims paid            $373,641   (12.5% of trades claimed)
-    LP net                 $166,083
-    worst single night      $-5,020
-    loss ratio                0.692
+    premiums written       $582,035
+    claims paid            $386,429   (11.2% of trades claimed)
+    LP net                 $195,606
+    worst single night      $-5,859
+    loss ratio                0.664
 ```
 
-Read honestly: the point estimate beats both baselines, σ runs slightly **wide**
-at 1σ and lands on target at 2σ, and the book runs at a 0.69 loss ratio — LP
-margin, and users paying a little more than fair for Band. Those are the real
-numbers and they are in the UI too, one click.
+Read honestly. The point estimate beats both baselines. σ is not merely the right
+*width* — the coverage pins down the distribution's *shape*, and it is a
+standardised Student-t with 4 degrees of freedom, not a normal. So that is what the
+premium is priced off.
+
+That correction went the direction nobody expects. Fat tails sound like they should
+make insurance dearer; at a deductible of 0 or 1σ the taller peak dominates instead,
+and the honest price came out **11% cheaper for Pin and 7% cheaper for Band** than
+the Gaussian formula we started with. The book still runs at a 0.66 loss ratio
+(0.74 on Pin) — real insurance-book margin, all of it LP compensation for variance.
+
+Every number here is one click away in the UI, and `engine/backtest.ts` reproduces
+it on your machine.
 
 ![Backtest](media/07-backtest.png)
+
+## A forecast, in git, before the outcome existed
+
+A backtest is a claim about a model on data the author picked. So here is the other
+kind of evidence.
+
+```bash
+npm run forecast:record    # snapshot live marks -> forecasts/marks.jsonl, commit it
+npm run forecast:score     # after the bell, fetch what actually happened
+npm run forecast           # the running scorecard
+```
+
+`forecasts/marks.jsonl` holds timestamped marks with their bands and every input
+that produced them, written before the auction they predict. Check the commit date
+against the print. You do not have to trust us, run our code, or accept our
+synthetic world — the file was in the repo before the answer existed.
 
 ## Run it
 
 ```bash
 # the demo — both modes, toggle in the header
 cd app && npm install && npm run dev        # http://localhost:5273
+
+# a timestamped forecast you can check later
+npm run forecast:record
 
 # the numbers
 npx tsx engine/backtest.ts 800 BAND
@@ -223,6 +254,8 @@ app/                   the demo (Vite + React, hand-rolled SVG charts)
   src/lib/world.ts     deterministic synthetic world with a latent truth Nyx cannot see
   src/lib/backtest.ts  scoring
 engine/backtest.ts     the same backtest as a CLI
+engine/forecast.ts     record a timestamped mark, score it once the bell rings
+forecasts/            committed predictions, written before their outcomes
 tests/noctis.ts        on-chain lifecycle suite
 scripts/               localnet runner, screenshots, demo recorder
 docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
@@ -231,6 +264,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 ## Docs
 
 - [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
+- [docs/SECURITY.md](docs/SECURITY.md) — threat model, and the critical bug we found in our own settlement path
 - [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
 - [docs/MODEL.md](docs/MODEL.md) — how the mark and σ are built, and what σ is made of
 - [docs/PRICING.md](docs/PRICING.md) — the premium as an option on the gap, and a load we tested and deleted

@@ -12,7 +12,7 @@
 import type { Asset, FactorId } from '../data/universe';
 import { FACTORS, UNIVERSE } from '../data/universe';
 import type { FactorNoise, FactorReturns, TapeSignal } from './nyx';
-import { informationHours } from './market';
+import { informationHoursAhead } from './market';
 
 /** mulberry32 — small, fast, seeded. */
 export function rng(seed: number) {
@@ -109,8 +109,12 @@ const cache = new Map<string, {
  * what "time" means.
  */
 function windowTradingDays(sc: Scenario) {
-  const kind = sc.windowHours > 40 ? 'weekend' : 'overnight';
-  return informationHours(sc.windowHours, kind) / 6.5;
+  // Integrated, not flat. Nyx measures the remaining window by walking it and
+  // summing each hour's weight; if the world generated its latent path on a
+  // different clock the backtest would be scoring the model against a straw man.
+  // (It briefly did: the flat version undercounted the Monday pre-market hours, so
+  // sigma looked 13 points over-covered against a truth that had been shrunk.)
+  return informationHoursAhead(Date.parse(sc.startUTC), sc.windowHours) / 6.5;
 }
 
 function buildPaths(sc: Scenario) {

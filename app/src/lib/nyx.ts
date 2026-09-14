@@ -13,7 +13,7 @@
 
 import type { Asset, FactorId } from '../data/universe';
 import { FACTORS } from '../data/universe';
-import { informationHours, type SessionState } from './market';
+import { informationHoursAhead, type SessionState } from './market';
 
 /** Observed return of each always-on factor since the last ET close, decimal. */
 export type FactorReturns = Record<FactorId, number>;
@@ -92,7 +92,11 @@ export function computeMark(
   noise: FactorNoise,
   tape: TapeSignal,
 ): Mark {
-  const infoHours = Math.max(0.05, informationHours(session.hoursClosed, session.kind));
+  // Integrate the elapsed window too, for the same reason the forward one is
+  // integrated: a flat weight taken from whatever session happens to be current
+  // misprices every hour that isn't in it.
+  const infoHours = Math.max(0.05, informationHoursAhead(
+    session.nowMs - session.hoursClosed * 3_600_000, session.hoursClosed));
   // Fraction of a 6.5-hour trading day of information that has accrued.
   const tDays = infoHours / 6.5;
 
@@ -151,8 +155,13 @@ export function computeMark(
   //    opening auction. Even a perfect read of the present leaves the whole
   //    remaining path unaccounted for. Omitting this is why a naive weekend model
   //    blows through its own band on Monday: it was answering the wrong question.
-  const futureHours = informationHours(
-    Math.max(0, session.hoursToOpen ?? 0), session.kind);
+  // While the primary venue is open there is no gap to forecast — the thing we are
+  // predicting is printing right now — so the remaining path contributes nothing.
+  // Otherwise integrate the weight across the window rather than assuming the
+  // current session's weight holds all the way to the bell.
+  const futureHours = session.isOpen
+    ? 0
+    : informationHoursAhead(session.nowMs, Math.max(0, session.hoursToOpen ?? 0));
   const future = (asset.totalVol ** 2) * (futureHours / 6.5 / 252);
 
   // 4. Disagreement: the two witnesses telling different stories is itself
@@ -161,7 +170,16 @@ export function computeMark(
   const disagreement = (gap * 0.45) ** 2;
 
   // 5. Event risk. Earnings tonight is a discontinuity no factor model sees coming.
+  //
+  // `earningsInDays < 0` means "we have no calendar". That is NOT the same as "no
+  // earnings tonight", and treating it as zero would be the exact mistake this
+  // model makes a point of not making elsewhere. Live mode has no free earnings
+  // feed, so it carries the unconditional risk instead: a name reports ~4 times a
+  // year over ~252 sessions, so about a 1.6% chance on any given night, blended
+  // against the jump variance an actual report produces.
+  const P_REPORTS_TONIGHT = 4 / 252;
   const event =
+    asset.earningsInDays < 0 ? P_REPORTS_TONIGHT * (0.075 ** 2) :
     asset.earningsInDays === 0 ? (0.075) ** 2 :
     asset.earningsInDays <= 1 ? (0.030) ** 2 :
     asset.earningsInDays <= 3 ? (0.012) ** 2 : 0;

@@ -184,7 +184,7 @@ await hush();
 
 await to('text=ASSURANCE RECEIPTS', 320);
 await say('Same trade, three outcomes.'
-  + '<i>Raw: −$862. Band: paid $24.78, recovered $585 → −$302. Pin: paid $118.63, recovered all of it.</i>', 6200);
+  + '<i>Naked: the whole gap. Band: absorbed one sigma, the vault paid the rest. Pin: made whole to the print.</i>', 5800);
 await say('The Pin holder\'s entire loss <b>is the premium</b>.<br>That is the product.', 4200);
 await hush();
 
@@ -202,9 +202,29 @@ await page.getByRole('button', { name: /Run \d+-night backtest/ }).click();
 await wait(2200);
 await to('text=DOES ANY OF THIS ACTUALLY WORK');
 await say('200 independent weekends. The model never sees the latent path it is scored against.', 3800);
-await say('<b>58% better</b> than the last close. Better than the 24/7 book too.'
-  + '<i>And σ is honest: 73% coverage at 1σ against a 68.3% target, 94% at 2σ against 95.4%.</i>', 6000);
+await say('<b>58% better</b> than the last close. Better than the 24/7 book too.', 3400);
+await say('And look at the shape, not just the width.'
+  + '<i>75% inside 1σ, 95% inside 2σ. A normal predicts 68% and 95%. A Student-t with four degrees of freedom predicts 77% and 95%. That is what the gap distribution is — so that is what we price off.</i>', 7000);
+await say('Which made the product <b>cheaper</b>, not dearer.'
+  + '<i>At a one-sigma deductible the taller peak beats the fatter tail. Pin fell 11%. We could have kept the Gaussian and called the difference prudence.</i>', 6400);
 await hush();
+
+// ───────────────────────────────────────────── scene 7: the bug we found
+await card('One more thing.',
+  'We went looking for holes in our own settlement path.<br><span class="k">We found one.</span>', 4000);
+
+await card('The exploit',
+  '<span style="font-size:20px;line-height:1.7;display:block;text-align:left;max-width:820px">'
+  + 'The opening print stayed on the account forever.<br><br>'
+  + 'So the <i>next</i> weekend, buy Pin cover in whichever direction<br>'
+  + 'last Monday\'s print favoured — then call the permissionless<br>'
+  + 'settle immediately. No waiting. No risk. Repeat until the vault<br>'
+  + 'is empty.</span>', 8000);
+
+await card('Closed.',
+  'Receipts now carry the window they were written in,<br>'
+  + 'and settlement refuses to cross one.<br><br>'
+  + '<span class="k">18 on-chain tests. One of them runs the attack.</span>', 5200);
 
 await card('Noctis',
   'Wall Street closes. The chain doesn\'t.<br><span class="k">Somebody has to price the gap.</span>', 4200);

@@ -99,7 +99,9 @@ shows the loss.
 Click **Run 200-night backtest**.
 
 - 58% better than the last close, and better than the 24/7 book.
-- 73.5% coverage at 1σ against a 68.3% target; 94.2% at 2σ against 95.4%.
+- 76.1% coverage at 1σ, 95.8% at 2σ. A normal predicts 68.3% / 95.4%; a
+  standardised t(4) predicts 77.0% / 95.3%. That pair identifies the shape, and the
+  premium is priced off t(4) — which made it **cheaper**, not dearer.
 - The z-histogram, the loss ratio, and the **worst single night** — the number an
   LP actually needs.
 

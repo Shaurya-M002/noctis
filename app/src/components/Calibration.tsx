@@ -52,10 +52,10 @@ export function Calibration() {
         <div className="flex flex-wrap gap-6">
           <Stat label="Nights simulated" value={bt.nights.toLocaleString()} size="sm" />
           <Stat label="RMSE vs last close" value={pct(improve, 1) + ' better'} tone="mark" size="sm" />
-          <Stat label="1σ coverage" value={pct(bt.coverage1, 1)} sub="target 68.3%"
-                tone={Math.abs(bt.coverage1 - 0.683) < 0.06 ? 'up' : 'down'} size="sm" />
-          <Stat label="2σ coverage" value={pct(bt.coverage2, 1)} sub="target 95.4%"
-                tone={Math.abs(bt.coverage2 - 0.954) < 0.05 ? 'up' : 'down'} size="sm" />
+          <Stat label="1σ coverage" value={pct(bt.coverage1, 1)} sub="t(4) says 77.0%"
+                tone={Math.abs(bt.coverage1 - 0.770) < 0.05 ? 'up' : 'down'} size="sm" />
+          <Stat label="2σ coverage" value={pct(bt.coverage2, 1)} sub="t(4) says 95.3%"
+                tone={Math.abs(bt.coverage2 - 0.953) < 0.04 ? 'up' : 'down'} size="sm" />
         </div>
         <button onClick={() => setRan(false)}
                 className="rounded-lg border border-line px-2.5 py-1.5 text-[11px] text-ink3 hover:text-ink2">
@@ -94,8 +94,11 @@ export function Calibration() {
             Is σ honest?
           </h3>
           <p className="mt-1 mb-3 text-[11px] text-ink3">
-            Standardised errors (open − mark) ÷ σ. If the model is calibrated this is
-            a unit normal — not too fat, not too thin.
+            Standardised errors (open − mark) ÷ σ. The right target depends on the
+            distribution&apos;s <em>shape</em>, not only its width — and we measured
+            the shape rather than assuming one. It is a Student-t with 4 degrees of
+            freedom, so premiums are priced off t(4), which at these strikes is{' '}
+            <span className="text-up">cheaper</span> than a Gaussian, not dearer.
           </p>
           <div className="flex h-[132px] items-end gap-[3px]">
             {bt.zHist.map((b, i) => (
@@ -112,7 +115,8 @@ export function Calibration() {
             <span>−4σ</span><span>0</span><span>+4σ</span>
           </div>
           <p className="mt-2 text-[10px] leading-snug text-ink3">
-            Solid bars are inside ±1σ. They should be about two thirds of the mass.
+            Solid bars are inside ±1σ. Under t(4) that should be about 77% of the
+            mass — a normal would say two thirds, and would be wrong here.
           </p>
         </div>
       </div>

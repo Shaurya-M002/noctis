@@ -47,14 +47,16 @@ E[(Z − k)⁺]  =  φ(k) − k·(1 − Φ(k))
 fair = N · σ · E[(Z − k)⁺]
 ```
 
-Two constants do the whole job, because the tier set is fixed:
+Two constants do the whole job, because the tier set is fixed. But **Z is not
+normal**, and we know that because we measured it — see below:
 
 ```
-k = 0  →  φ(0)                    = 0.398942     (Pin — the Bachelier half-straddle)
-k = 1  →  φ(1) − (1 − Φ(1))       = 0.083315     (Band)
+                        Gaussian      standardised t(4)   ← what we ship
+k = 0  (Pin)            0.398942      0.353549            0.886x
+k = 1  (Band)           0.083315      0.077346            0.928x
 ```
 
-Band is 4.8× cheaper than Pin for a reason you can read off that line: absorbing
+Band is 4.6× cheaper than Pin for a reason you can read off that line: absorbing
 the first standard deviation removes most of the expected payout.
 
 Then two loads:
@@ -71,6 +73,35 @@ premium = fair · ( 1  +  u²  +  min(1.5, 1.2 · N/depth) )
 
 Floor: 1 cent, so dust trades cannot mint free optionality.
 
+## Choosing the distribution by measuring it
+
+The Gaussian is the default assumption and it is wrong here. Once σ was correctly
+scaled, the backtest reported **76.1%** of opening prints inside ±1σ and **95.8%**
+inside ±2σ.
+
+| | 1σ | 2σ |
+|---|---|---|
+| normal | 68.3% | 95.4% |
+| **standardised t(4)** | **77.0%** | **95.3%** |
+| **measured** | **76.1%** | **95.8%** |
+
+That pair of numbers is a fingerprint. A distribution can be too wide or too narrow
+and still be normal; being *over*-covered at 1σ while landing on target at 2σ is a
+statement about shape — peaked in the middle, heavy in the tails. It is a t(4), and
+overnight equity gaps having about four degrees of freedom is exactly what the
+empirical finance literature would predict.
+
+**The correction goes the way nobody guesses.** "Fat tails" sounds like it should
+make insurance dearer. At a far strike it would. At a deductible of 0 or 1σ the
+taller peak dominates: more probability mass sits near zero, so the expected payout
+is *smaller* than the Gaussian price. Repricing honestly made Pin **11% cheaper**
+and Band **7% cheaper**.
+
+We could have left the Gaussian in, called the difference prudence, and pocketed a
+0.53 loss ratio. Measuring it and passing the difference on is the whole posture of
+this project: **we are paid when the model is right, so the model being right has
+to mean the price falls.**
+
 ## A load we tested and deleted
 
 The fair price assumes σ is *known*. It is not — it is an estimate, and
@@ -78,18 +109,19 @@ The fair price assumes σ is *known*. It is not — it is an estimate, and
 real payouts above the Gaussian-with-known-σ price. We shipped a 1.35× "model
 risk" multiplier for it.
 
-Then we measured. Once σ itself was properly calibrated — 73.5% coverage at 1σ
-against a 68.3% target — the book already ran at a **0.69 loss ratio** on fair
-plus the two loads. The extra multiplier took it to **0.57**: LPs earning a
-handsome return by overcharging users for a risk that was already priced.
+Then we measured. Once σ itself was properly calibrated the book already ran at a
+healthy loss ratio on fair plus the two loads. The extra multiplier pushed it well
+below: LPs earning a handsome return by overcharging users for a risk that was
+already priced.
 
 It is gone. The 30% of premium that is not expected claims *is* the LP's
 compensation for bearing variance. That is what a loss ratio is for.
 
-We also checked the obvious counter-hypothesis — that gaps are Student-t and the
-Gaussian underprices the tails. For a *unit-variance* t(ν=4), `E[(Z−k)⁺]` is
-**0.88–0.93×** the Gaussian value at k ∈ {0,1}: fat tails come with a taller peak,
-and at these strikes the peak wins. A fat-tail load would have been backwards.
+The counter-hypothesis — that gaps are Student-t and the Gaussian *under*prices the
+tails — turned out to be half right and backwards. Gaps are indeed Student-t. But
+for a unit-variance t(4), `E[(Z−k)⁺]` is **0.89–0.93×** the Gaussian value at
+k ∈ {0,1}. A fat-tail load would have been the wrong sign, which is why we now
+price the t(4) directly rather than loading a Gaussian.
 
 ## Settlement
 

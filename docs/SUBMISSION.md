@@ -10,8 +10,8 @@ Noctis
 
 **One line**
 
-Fair value — and a price for being wrong about it — for the 135 hours a week
-nobody is printing US equities.
+The fair-value layer for the 135 hours a week US equities aren't priced —
+published with an error bar you can buy insurance against.
 
 **Links**
 
@@ -108,6 +108,12 @@ a weekend where the vault loses and we earn nothing.
   Jupiter / DexScreener / Coinbase data, keyless and fetched from the browser,
   with every source's status and latency on screen.
 - **A backtest that can embarrass us**, in the UI and as a CLI.
+- **Timestamped forecasts committed to git before their outcomes existed**
+  (`forecasts/marks.jsonl`), with a scorer that reads what actually happened. You
+  can check the commit date against the print without running anything of ours.
+- **A threat model** (`docs/SECURITY.md`) including a critical settlement-replay
+  bug we found in our own code in review, the exploit path written out, and the
+  test that closes it.
 
 ## What live data changed
 
@@ -130,12 +136,17 @@ latent path:
 
 | | |
 |---|---|
-| RMSE vs opening print | **3.58%** (last close 8.47%, thin book 5.01%) |
-| Improvement over doing nothing | **57.7%** |
-| Coverage at 1σ | 73.5% (target 68.3% — we run wide) |
-| Coverage at 2σ | 94.2% (target 95.4%) |
-| Underwriting loss ratio | 0.69 |
-| Worst single night | −$5,020 |
+| RMSE vs opening print | **4.02%** (last close 9.43%, thin book 5.15%) |
+| Improvement over doing nothing | **57.4%** |
+| Coverage at 1σ | 76.1% — normal says 68.3%, t(4) says 77.0% |
+| Coverage at 2σ | 95.8% — normal says 95.4%, t(4) says 95.3% |
+| Underwriting loss ratio | 0.66 Band / 0.74 Pin |
+| Worst single night | −$5,859 |
+
+The coverage pair identifies the gap distribution as a standardised Student-t with
+4 degrees of freedom, so that is what the premium is priced off rather than a
+Gaussian. Counter-intuitively that made the product **cheaper** — 11% on Pin, 7% on
+Band — because at a 0 or 1σ deductible the taller peak beats the fatter tail.
 
 ## What is not built
 

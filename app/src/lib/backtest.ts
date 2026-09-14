@@ -10,8 +10,8 @@
 import { UNIVERSE } from '../data/universe';
 import { computeMark } from './nyx';
 import { quotePremium, settle, type Tier } from './pricing';
-import type { SessionState } from './market';
-import { SCENARIOS, openingPrint, rng, worldAt, type Scenario } from './world';
+import { sessionAt } from './market';
+import { SCENARIOS, instantAt, openingPrint, rng, worldAt, type Scenario } from './world';
 
 export interface NightResult {
   scenario: string;
@@ -68,11 +68,10 @@ export function runBacktest(nights = 200, tier: Tier = 'BAND', notionalPerTrade 
     // Quote 6 hours before the auction — a realistic "late Sunday" decision point.
     const h = sc.windowHours * 0.9;
     const w = worldAt(sc, h);
-    const sess = {
-      kind: sc.windowHours > 40 ? 'weekend' : 'overnight',
-      hoursClosed: h,
-      hoursToOpen: sc.windowHours - h,
-    } as SessionState;
+    // A real session off the scenario's own calendar, so `nowMs` and `isOpen` are
+    // populated and the remaining-time integration sees the same clock the app does.
+    const base = sessionAt(instantAt(sc, h));
+    const sess = { ...base, hoursClosed: h, hoursToOpen: sc.windowHours - h };
 
     let nightPnl = 0;
     const r = rng(sc.seed ^ 0xbeef);

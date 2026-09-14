@@ -32,8 +32,11 @@ for (const [k, v] of rows) {
 console.log(`    ${pad('', 28)}          → Noctis is ${pct(1 - bt.rmse.noctis / bt.rmse.lastClose, 1)} better than doing nothing\n`);
 
 console.log('  Is sigma honest?');
-console.log(`    inside ±1σ   ${pct(bt.coverage1, 1).padStart(7)}   (a calibrated model gives 68.3%)`);
-console.log(`    inside ±2σ   ${pct(bt.coverage2, 1).padStart(7)}   (a calibrated model gives 95.4%)\n`);
+console.log('    target depends on the SHAPE of the gap distribution, not just its width:');
+console.log(`    inside ±1σ   ${pct(bt.coverage1, 1).padStart(7)}    normal 68.3%  ·  standardised t(4) 77.0%`);
+console.log(`    inside ±2σ   ${pct(bt.coverage2, 1).padStart(7)}    normal 95.4%  ·  standardised t(4) 95.3%`);
+console.log('    → the gap is peaked and fat-tailed. Premiums are priced off t(4),');
+console.log('      which at these strikes is CHEAPER than the Gaussian, not dearer.\n');
 
 console.log('  Underwriting book');
 console.log(`    premiums written   ${usd(bt.vault.premiums).padStart(12)}`);
