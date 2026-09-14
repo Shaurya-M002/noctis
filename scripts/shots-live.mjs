@@ -1,0 +1,20 @@
+/** Screenshots of live mainnet mode. */
+import { chromium } from 'playwright';
+import { mkdirSync } from 'node:fs';
+mkdirSync('media', { recursive: true });
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1680, height: 1080 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+await p.goto(process.env.URL ?? 'http://localhost:5273/', { waitUntil: 'networkidle' });
+await p.getByRole('button', { name: 'Live mainnet' }).click();
+await p.waitForTimeout(9000);
+await p.screenshot({ path: 'media/08-live.png', fullPage: true });
+console.log('  ✓ 08-live');
+const v = p.locator('section', { hasText: 'WHERE THE SAME TOKEN IS PRINTING' }).last();
+await v.scrollIntoViewIfNeeded(); await p.waitForTimeout(400);
+await v.screenshot({ path: 'media/09-venues.png' });
+console.log('  ✓ 09-venues');
+const s = p.locator('section', { hasText: 'DATA SOURCES' }).last();
+await s.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
+await s.screenshot({ path: 'media/10-sources.png' });
+console.log('  ✓ 10-sources');
+await b.close();

@@ -84,7 +84,7 @@ export const UNIVERSE: Asset[] = [
   },
   {
     sym: 'COINx', under: 'COIN', name: 'Coinbase', sector: 'Crypto financials',
-    mint: 'Xs7ZdzSHLU9ftNJsOu2BEw7vtsUsr8HuMSFAiRBHYaC',
+    mint: 'Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu',
     close: 289.44,
     beta: { MKT: 1.15, SECT: 0.30, CRYPTO: 1.62, FX: -0.08, RATES: -0.35 },
     idioVol: 0.52, totalVol: 0.66, depth: 140_000, earningsInDays: 18,

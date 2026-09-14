@@ -10,6 +10,19 @@ export function AssetRail({
       {UNIVERSE.map((a) => {
         const m = marks[a.sym];
         const sel = a.sym === sym;
+
+        // In live mode a name can simply be absent — a mint with no route, a feed
+        // that dropped it. Say so rather than crashing or inventing a price.
+        if (!m) {
+          return (
+            <div key={a.sym}
+                 className="flex items-center justify-between px-3 py-2.5 opacity-45">
+              <span className="text-[13px] text-ink3">{a.sym}</span>
+              <span className="text-[10px] uppercase tracking-wider text-ink3">no feed</span>
+            </div>
+          );
+        }
+
         const conf = m.confidence;
         return (
           <button

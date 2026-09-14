@@ -122,6 +122,12 @@ The synthetic world in `world.ts` generates its latent paths on the *same* clock
 so the model and the world it is scored against agree on what "time" means. That
 is a fairness property of the backtest, not a convenience.
 
+## Live inputs
+
+In live mode the same engine runs on real mainnet data, with two additions the
+synthetic world never needed — the weekend basis and leave-one-out factor
+construction. Both are in [DATA.md](DATA.md).
+
 ## What the model does not do
 
 - No news / NLP. A headline-driven jump is uncovered and shows up as event risk.

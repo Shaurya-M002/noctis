@@ -3,12 +3,14 @@ import { sessionAt, fmtDuration } from '../lib/market';
 import { SCENARIOS } from '../lib/world';
 
 export function Header({
-  scenarioId, setScenarioId, session, atOpen,
+  scenarioId, setScenarioId, session, atOpen, mode, setMode,
 }: {
   scenarioId: string;
   setScenarioId: (s: string) => void;
   session: { label: string; isDark: boolean; hoursClosed: number; nyDate: string; nyTime: string };
   atOpen: boolean;
+  mode: 'sim' | 'live';
+  setMode: (m: 'sim' | 'live') => void;
 }) {
   const [live, setLive] = useState(() => sessionAt(new Date()));
   useEffect(() => {
@@ -45,8 +47,28 @@ export function Header({
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-[10px] uppercase tracking-[0.11em] text-ink3">Scenario</span>
-          {SCENARIOS.map((s) => (
+          <div className="mr-2 inline-flex rounded-lg border border-line bg-void p-0.5">
+            {([['sim', 'Simulation'], ['live', 'Live mainnet']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setMode(id)}
+                className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                  mode === id ? 'bg-raised text-ink' : 'text-ink3 hover:text-ink2'
+                }`}
+              >
+                {id === 'live' && (
+                  <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${
+                    mode === 'live' ? 'bg-up pulse' : 'bg-ink3'
+                  }`} />
+                )}
+                {label}
+              </button>
+            ))}
+          </div>
+          {mode === 'sim' && (
+            <span className="mr-1 text-[10px] uppercase tracking-[0.11em] text-ink3">Scenario</span>
+          )}
+          {mode === 'sim' && SCENARIOS.map((s) => (
             <button
               key={s.id}
               onClick={() => setScenarioId(s.id)}
@@ -73,7 +95,7 @@ export function Header({
             {atOpen ? 'OPENING AUCTION — MARKET LIVE' : session.label}
           </span>
           <span className="text-[11.5px] text-ink2">
-            <span className="text-ink3">simulated clock </span>
+            <span className="text-ink3">{mode === 'live' ? 'now ' : 'simulated clock '}</span>
             <span className="num text-ink">{session.nyDate} {session.nyTime} ET</span>
           </span>
           <span className="text-[11.5px] text-ink2">
@@ -83,7 +105,9 @@ export function Header({
           <span className="ml-auto text-[11px] text-ink3">
             {atOpen
               ? 'The auction has printed. Everyone finds out how wrong they were.'
-              : 'xStocks keep trading. Price discovery does not.'}
+              : mode === 'live'
+                ? 'Live mainnet prices. Public endpoints, no key, no server.'
+                : 'xStocks keep trading. Price discovery does not.'}
           </span>
         </div>
       </div>

@@ -12,13 +12,15 @@ import { usd, bps, pct } from '../lib/fmt';
  * option on the gap, quoted in dollars, itemised.
  */
 export function Ticket({
-  asset, mark, quote, onTrade, disabled,
+  asset, mark, quote, onTrade, disabled, quoteOnly,
 }: {
   asset: Asset;
   mark: Mark;
   quote: (t: Tier, notional: number) => PremiumQuote;
   onTrade: (side: 'BUY' | 'SELL', qty: number, tier: Tier) => void;
   disabled: boolean;
+  /** Live mode: show what assurance would cost, but do not pretend it is executable. */
+  quoteOnly?: boolean;
 }) {
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState(50);
@@ -139,6 +141,14 @@ export function Ticket({
         </div>
       )}
 
+      {quoteOnly ? (
+        <p className="rounded-lg border border-line bg-void/60 px-3 py-2.5 text-[10.5px] leading-snug text-ink3">
+          Quote only. Live mode is not wallet-connected — these are what the
+          program would charge at the mark and σ above, computed by the same
+          fixed-point formula the chain runs. The executable path is exercised by
+          the on-chain test suite instead: <span className="num">scripts/localnet-test.sh</span>.
+        </p>
+      ) : (
       <button
         disabled={disabled}
         onClick={() => onTrade(side, qty, tier)}
@@ -152,6 +162,7 @@ export function Ticket({
           ? 'Market reopened — auction settled'
           : `${side} ${qty} ${asset.sym} @ ${mark.mid.toFixed(2)}${q.premium > 0 ? ` + ${usd(q.premium)}` : ''}`}
       </button>
+      )}
     </div>
   );
 }

@@ -29,6 +29,47 @@ which is 39% of the week, and it does not cover holidays.
 
 That gap is what Noctis is for.
 
+## Live, on mainnet, right now
+
+The demo has two modes and the toggle is in the header. **Live** points the same
+model at real data — Jupiter for on-chain and reference prices, DexScreener for
+volume and per-venue prints, Coinbase for crypto returns measured from the actual
+last ET close. Public endpoints, no API key, no server, fetched straight from the
+browser.
+
+Here is what it found on a Sunday night. Eight live AAPLx pools, same token, same
+instant, real money in each:
+
+![Venue dispersion](media/09-venues.png)
+
+**1019 basis points** between the highest and lowest print. Nobody can arbitrage
+that away, because the thing you would hedge against is shut. "The on-chain price"
+is not one number.
+
+Pointing the code at mainnet also changed the model twice — see
+[docs/DATA.md](docs/DATA.md):
+
+- **The weekend basis is not a forecast.** Every xStock trades below its reference
+  at once on a Sunday. Read naively that says the market is about to gap down 1.3%;
+  really it is the price of liquidity when nobody can hedge. Nyx strips the median
+  dislocation out and reads only the cross-section.
+- **Factors are built leave-one-out.** SPYx *is* the market proxy, so letting it
+  help build the factor that then explains it was counting one observation twice
+  and giving it a 0.44% σ it had not earned.
+
+And where a factor has no free always-on source — a dollar index, a tokenised-bill
+yield — it is reported as **no source** and σ widens by the full uncertainty of the
+move it would have explained. Setting it to zero would be a confident claim that
+the dollar has not moved. Missing data should make the model less confident, not
+accidentally more.
+
+![Data sources](media/10-sources.png)
+
+Live mode **cannot verify itself** — scoring a mark needs an opening print, and
+Monday hasn't happened. So: live data proves the inputs are real, and the
+synthetic backtest below proves the model is calibrated. Neither claim borrows the
+other's evidence.
+
 ## What Noctis does
 
 **1. It publishes a mark, with the number every other oracle omits.**
@@ -112,7 +153,7 @@ numbers and they are in the UI too, one click.
 ## Run it
 
 ```bash
-# the demo
+# the demo — both modes, toggle in the header
 cd app && npm install && npm run dev        # http://localhost:5273
 
 # the numbers
@@ -158,6 +199,8 @@ programs/noctis/       Anchor program  ·  program id NoCTajFqJn1QScfX3KozwSitGz
   src/lib.rs           marks, vault, receipts, permissionless settlement crank
 app/                   the demo (Vite + React, hand-rolled SVG charts)
   src/lib/nyx.ts       the fair-value engine
+  src/lib/feeds.ts     live mainnet data — Jupiter, DexScreener, Coinbase
+  src/lib/useLive.ts   live mode: same model, real inputs
   src/lib/pricing.ts   the premium math, mirrored by math.rs
   src/lib/world.ts     deterministic synthetic world with a latent truth Nyx cannot see
   src/lib/backtest.ts  scoring
@@ -169,6 +212,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 ## Docs
 
+- [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
 - [docs/MODEL.md](docs/MODEL.md) — how the mark and σ are built, and what σ is made of
 - [docs/PRICING.md](docs/PRICING.md) — the premium as an option on the gap, and a load we tested and deleted
 - [docs/WHY_SOLANA.md](docs/WHY_SOLANA.md) — why this is not a web2 API with a token bolted on
@@ -177,12 +221,18 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 ## Honesty
 
-Prices, betas, the on-chain tape and the latent path in this demo are **synthetic
-and deterministic** — one seed, reproducible, and documented in
-[docs/LIMITS.md](docs/LIMITS.md). No live market data is wired in. What is real:
-the program compiles to SBF and passes a full lifecycle on a validator, the
-fixed-point math is the same in Rust and TypeScript, and the backtest is scored
-against a latent path the model genuinely cannot see.
+**Live mode** is real mainnet data from public keyless endpoints, listed with
+status and latency in the UI so you can check every one.
+
+**Simulation mode** is synthetic and deterministic — one seed, reproducible, and
+documented in [docs/LIMITS.md](docs/LIMITS.md). Betas, vols and the latent path
+are calibrated to plausible values, not fetched. Every calibration number in this
+README comes from there, because scoring a mark requires an opening print that
+live mode does not have yet.
+
+Also real: the program compiles to SBF and passes a full lifecycle on a validator,
+and the fixed-point premium math is the same formula in Rust and TypeScript, with
+the on-chain test asserting the client's number against the chain's.
 
 Nothing here is investment advice, and Reopen Assurance is a mechanism prototype,
 not a regulated insurance product.

@@ -97,10 +97,26 @@ a weekend where the vault loses and we earn nothing.
 - **15 on-chain lifecycle tests** on a real validator, 0 failing —
   `./scripts/localnet-test.sh`.
 - **12 Rust unit tests** on the premium and settlement math.
-- **The demo app** — the four answers side by side, a scrubbable weekend, full
-  return attribution and variance budget, the ticket, receipts, the vault, and the
-  backtest, all in the browser.
+- **The demo app**, in two modes. *Simulation*: the four answers side by side, a
+  scrubbable weekend, full return attribution and variance budget, the ticket,
+  receipts, the vault, and the backtest. *Live mainnet*: the same model on real
+  Jupiter / DexScreener / Coinbase data, keyless and fetched from the browser,
+  with every source's status and latency on screen.
 - **A backtest that can embarrass us**, in the UI and as a CLI.
+
+## What live data changed
+
+Pointing the code at mainnet was not a cosmetic step — it found two real defects.
+The whole xStocks complex trades below reference on a Sunday, and reading that
+naively made Nyx bearish on every name at once; it is a liquidity premium, not a
+forecast, so the median is now stripped out. And SPYx, which *is* the market
+proxy, was contributing to the factor that then explained it — one observation
+counted twice, and a 0.44% σ it had not earned. Factors are now built
+leave-one-out.
+
+Live mode also shows the number that needs no model at all: eight AAPLx pools on
+mainnet, same instant, **1019 bps between the highest and lowest print**. Nobody
+can close that, because the thing you would hedge against is shut.
 
 ## The numbers
 
@@ -118,8 +134,9 @@ latent path:
 
 ## What is not built
 
-Stated up front, in full, in `docs/LIMITS.md`. In short: all market data is
-synthetic and deterministic; the app is not wallet-connected (the chain is
+Stated up front, in full, in `docs/LIMITS.md`. In short: live mode cannot score
+itself, so every calibration number comes from the synthetic backtest; betas and
+vols are hand-set in both modes; the app is not wallet-connected (the chain is
 exercised by the test suite instead); the devnet deploy did not happen because the
 faucet rate-limited us and the binary needs ~2.7 SOL of rent; and the oracle is a
 single permissioned signer, which is the first thing we would fix.

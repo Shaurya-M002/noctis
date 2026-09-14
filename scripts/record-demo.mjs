@@ -94,6 +94,33 @@ await card('NOCTIS',
 await card('168 hours in a week.',
   'US equities discover a price in <span class="k">32.5</span> of them.<br>Tokenized equities on Solana trade all 168.');
 
+// ───────────────────────────────────────────── scene 1b: live mainnet
+await page.getByRole('button', { name: 'Live mainnet' }).click();
+await wait(8000);
+await say('This is mainnet. Right now. No API key, no server — the browser is<br>reading Jupiter, DexScreener and Coinbase directly.', 4600);
+await hush();
+
+await to('text=WHERE THE SAME TOKEN IS PRINTING', 250);
+await say('Eight live pools. The same token. The same instant.'
+  + '<i>331.67 on one Raydium pool. 297.92 on Orca. Real money in both.</i>', 5600);
+await say('<b>Over a thousand basis points apart</b>, and nothing closes it —<br>'
+  + 'the thing you would hedge against is shut.'
+  + '<i>"The on-chain price" is not one number. On a weekend it is barely a price.</i>', 6200);
+await hush();
+
+await to('text=DATA SOURCES', 220);
+await say('Where every number came from, with latency. And where it didn\'t:'
+  + '<i>no free always-on dollar index, so FX reads "no source" and σ widens by the full move it would have explained. Missing data should make a model less confident, not accidentally more.</i>', 6600);
+await hush();
+
+await card('To score a mark, you need the answer.',
+  'Monday hasn\'t happened.<br>So let\'s replay a weekend where we already know it.', 4200);
+
+await page.evaluate(() => window.scrollTo({ top: 0 }));
+await page.getByRole('button', { name: 'Simulation' }).click();
+await wait(1200);
+
+// ───────────────────────────────────────────── scene 2: the four answers
 await page.mouse.move(800, 500);
 await say('So — what is <b>AAPLx</b> worth at 10am on a Saturday?', 3600);
 await say('Pyth says <b>MARKET_CLOSED</b>. The last close is Friday\'s number.<br>The 24/7 book is one $40k order and 26 bps wide.'
