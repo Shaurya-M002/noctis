@@ -16,6 +16,18 @@
 //! own uncertainty estimates are honest.
 
 use anchor_lang::prelude::*;
+// `token_interface`, not `token`, and that is not a style choice.
+//
+// xStocks mints are owned by TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb -- the
+// Token-2022 program -- and their mint accounts are ~678 bytes rather than the
+// classic 82, because they carry extensions. Specifically ScaledUiAmount, which is
+// how a stock split or a dividend is applied to every holder at once by moving a
+// multiplier instead of rebasing balances.
+//
+// A program written against the classic SPL token interface simply cannot hold or
+// move these. It also costs us: Token-2022 support is the single largest
+// contributor to the deployed binary, and dropping it would take roughly a third
+// off the rent. It is not optional for this asset.
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 pub mod math;

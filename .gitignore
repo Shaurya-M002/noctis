@@ -12,3 +12,4 @@ media/*.webm
 *.tsbuildinfo
 forecasts/cron.log
 forecasts/launchd.log
+forecasts/devnet-deploy.log

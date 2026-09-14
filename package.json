@@ -12,13 +12,14 @@
     "backtest": "tsx engine/backtest.ts",
     "test:math": "cargo test -p noctis --lib",
     "test:program": "./scripts/localnet-test.sh",
-    "build:program": "cargo-build-sbf --tools-version v1.52 && anchor idl build -o target/idl/noctis.json -t target/types/noctis.ts",
+    "build:program": "cargo-build-sbf --tools-version v1.52 --features no-idl && anchor idl build -o target/idl/noctis.json -t target/types/noctis.ts",
     "shots": "node scripts/shots.mjs",
     "record": "node scripts/record-demo.mjs",
     "forecast": "tsx engine/forecast.ts report",
     "forecast:record": "tsx engine/forecast.ts record",
     "forecast:score": "tsx engine/forecast.ts score",
-    "test:all": "cargo test -p noctis --lib && ./scripts/localnet-test.sh && tsx engine/backtest.ts 800 BAND"
+    "test:all": "cargo test -p noctis --lib && ./scripts/localnet-test.sh && tsx engine/backtest.ts 800 BAND",
+    "deploy:devnet": "./scripts/devnet-deploy.sh && cat forecasts/devnet-deploy.log"
   },
   "keywords": [],
   "author": "",

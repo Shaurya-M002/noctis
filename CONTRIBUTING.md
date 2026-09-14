@@ -42,25 +42,45 @@ sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
 cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
 avm install 0.31.1 && avm use 0.31.1
 
-npm run test:math       # 12 unit tests on the fixed-point premium math
-npm run build:program   # SBF binary + IDL
+npm run test:math       # 17 unit tests: premium math + the vault reserve
+npm run build:program   # SBF binary (--features no-idl) + IDL
 npm run test:program    # throwaway validator, deploy, 18 lifecycle tests
 ```
 
 `npm run test:all` runs all three.
 
+## Why the binary is 292 KB
+
+Mostly Token-2022. xStocks mints are owned by the Token-2022 program and carry the
+ScaledUiAmount extension — that is how a stock split or dividend is applied, by
+moving a multiplier rather than rebasing every balance. So the program is written
+against `anchor_spl::token_interface`, and that dependency is roughly a third of
+the binary. Building against the classic SPL token interface would be a lot smaller
+and could not hold the asset.
+
+The rest is squeezed: `opt-level = "z"`, fat LTO, one codegen unit, `panic = abort`,
+symbols stripped, and `--features no-idl` (the IDL is still emitted to
+`target/idl/noctis.json`, which is what clients consume — only the on-chain copy is
+dropped). That took 386 KB → 292 KB, which is ~0.5 SOL off the rent.
+
 ## Deploying to devnet
 
-The binary is 333 KB, so rent is ~2.3 SOL and the deploy needs a funded key.
+Rent is ~1.48 SOL for a 292 KB program (`solana rent 291712` to check).
 
 ```bash
 solana-keygen new -o .keys/deployer.json          # gitignored
-solana airdrop 2 --url devnet                     # or faucet.solana.com if rate-limited
-solana -u devnet program deploy \
-  --keypair .keys/deployer.json \
-  --program-id target/deploy/noctis-keypair.json \
-  target/deploy/noctis.so
+solana airdrop 2 --url devnet                     # heavily rate-limited per IP
+./scripts/devnet-deploy.sh                        # airdrop, check, deploy, verify
 ```
+
+`scripts/devnet-deploy.sh` is idempotent and safe to run on a timer — it asks for an
+airdrop, deploys only once the balance clears rent, verifies, and then disables
+itself via `.keys/.devnet-deployed`. There is a LaunchAgent
+(`com.noctis.devnet`) that runs it hourly, because the faucet rate-limits far more
+aggressively than it refuses outright.
+
+If the CLI faucet is stuck, [faucet.solana.com](https://faucet.solana.com) gives
+more per day but requires a GitHub sign-in in a browser.
 
 Program id `NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE` — the keypair for it is in
 `target/deploy/`, which is gitignored, so a fresh clone will generate its own.
