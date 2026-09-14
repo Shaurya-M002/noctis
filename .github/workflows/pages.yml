@@ -1,0 +1,63 @@
+name: demo
+
+# Publishes the Noctis demo to GitHub Pages.
+#
+# Live mode talks to Jupiter, DexScreener and Coinbase straight from the visitor's
+# browser — all three send permissive CORS headers — so there is no server, no
+# proxy and no secret to configure. A static build is genuinely the whole thing.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+        working-directory: app
+
+      # Typecheck in CI too. A demo that builds but does not compile is a demo
+      # that is about to stop building.
+      - run: npx tsc -b --noEmit
+        working-directory: app
+
+      - run: npm run build
+        working-directory: app
+        env:
+          PAGES_BASE: /noctis/
+
+      # Pages serves 404.html for unknown paths; the app is a single page, so
+      # point it back at the app rather than at GitHub's default.
+      - run: cp dist/index.html dist/404.html
+        working-directory: app
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
