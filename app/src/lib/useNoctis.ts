@@ -117,9 +117,12 @@ export function useNoctis() {
     return o;
   }, [scenario]);
 
-  const exposure = receipts
-    .filter((r) => !r.settlement)
-    .reduce((s, r) => s + r.capitalAtRisk, 0);
+  // Mirrors `Vault::reserve` in the program: one gap cannot pay both sides of a
+  // name, so reserve the larger leg plus half the smaller rather than the sum.
+  const live = receipts.filter((r) => !r.settlement);
+  const longRisk = live.filter((r) => r.side === 'BUY').reduce((s, r) => s + r.capitalAtRisk, 0);
+  const shortRisk = live.filter((r) => r.side === 'SELL').reduce((s, r) => s + r.capitalAtRisk, 0);
+  const exposure = Math.max(longRisk, shortRisk) + 0.5 * Math.min(longRisk, shortRisk);
 
   const vault: VaultState = { tvl: INITIAL_TVL + premiumsCollected - payoutsPaid, exposure };
 
