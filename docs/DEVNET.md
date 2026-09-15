@@ -2,6 +2,9 @@
 
 Produced by `npx tsx engine/devnet-lifecycle.ts`. Click any signature.
 
+**Read the live state yourself:** `npx tsx engine/devnet-state.ts` — no wallet, no
+setup. It prints whatever the chain says right now.
+
 - Program: [`NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE`](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)
 - Asset is a devnet **Token-2022** stand-in for AAPLx, `4mWqeoKpepZTjiNgodKtzRznnEFiEHMUeUcPuJbJZ7mz` —
   xStocks only exist on mainnet ([`XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp`](https://explorer.solana.com/address/XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp)).

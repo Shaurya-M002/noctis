@@ -19,7 +19,8 @@
     "forecast:record": "tsx engine/forecast.ts record",
     "forecast:score": "tsx engine/forecast.ts score",
     "test:all": "cargo test -p noctis --lib && ./scripts/localnet-test.sh && tsx engine/backtest.ts 800 BAND",
-    "deploy:devnet": "./scripts/devnet-deploy.sh && cat forecasts/devnet-deploy.log"
+    "deploy:devnet": "./scripts/devnet-deploy.sh && cat forecasts/devnet-deploy.log",
+    "devnet:state": "tsx engine/devnet-state.ts"
   },
   "keywords": [],
   "author": "",
