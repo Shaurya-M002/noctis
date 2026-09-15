@@ -17,6 +17,10 @@ SO="$ROOT/target/deploy/noctis.so"
 LOG="$ROOT/forecasts/devnet-deploy.log"
 DONE="$ROOT/.keys/.devnet-deployed"
 RPC="https://api.devnet.solana.com"
+# api.devnet.solana.com rate-limits hard per IP. mango.devnet.rpcpool.com fronts the
+# same cluster with a separate limit and was the one that actually funded this
+# deploy, so ask it too before giving up.
+FAUCETS=("https://api.devnet.solana.com" "https://mango.devnet.rpcpool.com" "https://devnet.rpcpool.com")
 
 exec >>"$LOG" 2>&1
 echo "=== $(date -u '+%Y-%m-%dT%H:%M:%SZ') ==="
@@ -34,7 +38,9 @@ fi
 
 NEED=$(solana rent "$(stat -f%z "$SO")" 2>/dev/null | grep -o '[0-9.]*' | head -1)
 NEED=${NEED:-1.7}
-solana airdrop 2 "$(solana-keygen pubkey "$KEY")" --url "$RPC" 2>&1 | tail -1
+for f in "${FAUCETS[@]}"; do
+  echo "  airdrop via ${f#https://}: $(solana airdrop 2 "$(solana-keygen pubkey "$KEY")" --url "$f" 2>&1 | tail -1 | cut -c1-60)"
+done
 
 BAL=$(solana balance "$(solana-keygen pubkey "$KEY")" --url "$RPC" 2>/dev/null | awk '{print $1}')
 BAL=${BAL:-0}

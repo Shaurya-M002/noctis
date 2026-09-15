@@ -5,6 +5,7 @@
 Stocklana hackathon submission · Solana Foundation · September 2026
 
 **▶ [Open the live demo](https://shaurya-m002.github.io/noctis/)** — real mainnet data, no wallet needed ·
+**[Program on devnet](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)** — deployed, with the full lifecycle settled on-chain ·
 **[Watch the 3-minute walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** — captioned, no audio
 
 ![Noctis](media/02-hero.png)
@@ -291,6 +292,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 - [CONTRIBUTING.md](CONTRIBUTING.md) — running it from a clean clone, and three toolchain traps that cost us an hour each
 
 - [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
+- [docs/DEVNET.md](docs/DEVNET.md) — the whole lifecycle settled on devnet, every step a clickable transaction
 - [docs/SECURITY.md](docs/SECURITY.md) — threat model, and the critical bug we found in our own settlement path
 - [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
 - [docs/MODEL.md](docs/MODEL.md) — how the mark and σ are built, and what σ is made of
