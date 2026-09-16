@@ -8,9 +8,11 @@ import { bps, pct, pctSigned } from '../lib/fmt';
  * number one $40k order invented.
  */
 export function PriceHero({
-  asset, mark, base, dark, openPrint, scorecard,
+  asset, mark, base, dark, weekend, openPrint, scorecard,
 }: {
   asset: Asset; mark: Mark; base: Baselines; dark: boolean;
+  /** True only for weekend/holiday — when Pyth's own schedule says `C`. */
+  weekend?: boolean;
   openPrint?: number;
   scorecard?: { atHours: number; mark: Mark; base: Baselines } | null;
 }) {
@@ -42,22 +44,28 @@ export function PriceHero({
         <p className="mt-3 border-t border-mark/20 pt-2.5 text-[11.5px] leading-relaxed text-ink2">
           Not a last trade. A conditional expectation of Monday&apos;s opening
           print, published with a σ that is forecast error for that specific
-          auction — and published in a window where the equity feed above has no
-          price to be confident about at all.
+          auction — for a window that the feed above, by its own schedule, does
+          not cover.
         </p>
       </div>
 
       {/* What you'd have to use instead */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+        {/* Be exact about Pyth. Its equity feeds publish 24/5 — verified on
+            mainnet, ticking every ~15s pre-market — and only the weekend is
+            marked `C` in its own schedule string. Claiming otherwise is both
+            wrong and a weaker argument. */}
         <Alt
-          label="Pyth / Chainlink equity feed"
-          value={base.staleOracle.status === 'CLOSED' ? '—' : base.staleOracle.price.toFixed(2)}
+          label="Pyth equity feed"
+          value={weekend ? '—' : base.staleOracle.price.toFixed(2)}
           note={
-            base.staleOracle.status === 'CLOSED'
-              ? 'status: MARKET_CLOSED. No executable price at all.'
-              : 'trading'
+            weekend
+              ? 'Pyth schedule marks Sat/Sun “C”. Last publish Friday 16:00 ET.'
+              : base.staleOracle.status === 'CLOSED'
+                ? 'Publishing — 24/5 covers pre-market, after-hours and overnight.'
+                : 'Trading. This is the settlement truth Noctis resolves back to.'
           }
-          bad={base.staleOracle.status === 'CLOSED'}
+          bad={weekend}
         />
         <Alt
           label="Last official close"

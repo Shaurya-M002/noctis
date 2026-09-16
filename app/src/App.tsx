@@ -176,7 +176,8 @@ function SimulationView({ n }: { n: ReturnType<typeof useNoctis> }) {
               : 'The primary venue is shut. Four systems will still give you an answer.'}
         >
           <PriceHero asset={n.asset} mark={n.mark} base={n.base}
-                     dark={n.session.isDark} openPrint={openPrint} scorecard={n.scorecard} />
+                     dark={n.session.isDark} weekend={n.session.isDark}
+                     openPrint={openPrint} scorecard={n.scorecard} />
         </Panel>
 
         <Panel
