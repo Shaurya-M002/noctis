@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNoctis } from './lib/useNoctis';
 import { useLive } from './lib/useLive';
+import { usePreIPO } from './lib/usePreIPO';
 import { Header } from './components/Header';
 import { AssetRail } from './components/AssetRail';
 import { PriceHero } from './components/PriceHero';
@@ -8,6 +9,7 @@ import { BandChart } from './components/BandChart';
 import { VenueChart } from './components/VenueChart';
 import { Sources } from './components/Sources';
 import { PythMark } from './components/PythMark';
+import { PreIPOView } from './components/PreIPOView';
 import { Waterfall } from './components/Waterfall';
 import { Ticket } from './components/Ticket';
 import { Receipts } from './components/Receipts';
@@ -17,25 +19,26 @@ import { Panel } from './components/ui';
 import { fmtDuration } from './lib/market';
 import { bps, pct, pctSigned, compact } from './lib/fmt';
 
-export type Mode = 'sim' | 'live';
+export type Mode = 'sim' | 'live' | 'preipo';
 
 export default function App() {
   const [mode, setMode] = useState<Mode>('sim');
   const [liveSym, setLiveSym] = useState('AAPLx');
   const n = useNoctis();
   const live = useLive(mode === 'live', liveSym);
+  const pre = usePreIPO(mode === 'preipo');
 
   return (
     <div className="min-h-full">
       <Header
         scenarioId={n.scenarioId} setScenarioId={n.setScenarioId}
-        session={mode === 'live' ? live.session : n.session}
+        session={mode === 'live' || mode === 'preipo' ? live.session : n.session}
         atOpen={mode === 'sim' && n.settled}
         mode={mode} setMode={setMode}
       />
       <main className="relative z-10 mx-auto max-w-[1560px] px-6 py-5">
-        {mode === 'sim'
-          ? <SimulationView n={n} />
+        {mode === 'sim' ? <SimulationView n={n} />
+          : mode === 'preipo' ? <PreIPOView s={pre} />
           : <LiveView live={live} sym={liveSym} setSym={setLiveSym} />}
         <Footer mode={mode} />
       </main>
@@ -349,9 +352,11 @@ function Footer({ mode }: { mode: Mode }) {
       <p>
         <span className="text-ink2">Noctis</span> · Stocklana hackathon submission ·
         Solana Foundation, September 2026.{' '}
-        {mode === 'live'
-          ? 'Live mode reads Jupiter, DexScreener and Coinbase from your browser — no key, no server. Marks are model output, not quotes, and nothing here is executable.'
-          : 'Simulation mode is synthetic and deterministic by design — see docs/MODEL.md. Switch to Live for real mainnet prices.'}
+        {mode === 'preipo'
+          ? 'Pre-IPO reads PreStocks and Tessera marks via Jupiter, plus this repo’s own committed gap log. No exchange exists for these, so there is no auction to settle against — see docs/PREIPO.md.'
+          : mode === 'live'
+            ? 'Live mode reads Jupiter, DexScreener, Coinbase and Pyth from your browser — no key, no server. Marks are model output, not quotes, and nothing here is executable.'
+            : 'Simulation mode is synthetic and deterministic by design — see docs/MODEL.md. Switch to Live for real mainnet prices.'}
         {' '}Nothing here is investment advice or an offer of insurance.
       </p>
     </footer>

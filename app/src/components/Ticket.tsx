@@ -13,7 +13,7 @@ import { usd, bps, pct } from '../lib/fmt';
  * the point.
  */
 export function Ticket({
-  asset, mark, quote, onTrade, disabled, quoteOnly,
+  asset, mark, quote, onTrade, disabled, quoteOnly, settlesOn,
 }: {
   asset: Asset;
   mark: Mark;
@@ -22,6 +22,11 @@ export function Ticket({
   disabled: boolean;
   /** Live mode: show what assurance would cost, but do not pretend it is executable. */
   quoteOnly?: boolean;
+  /**
+   * Pre-IPO has no bell, so "reopen assurance" and "the opening print" are
+   * meaningless there. The mechanism is identical; only the settling event differs.
+   */
+  settlesOn?: string;
 }) {
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState(50);
@@ -86,7 +91,7 @@ export function Ticket({
       <div>
         <div className="mb-1.5 flex items-baseline justify-between">
           <span className="text-[10px] font-medium uppercase tracking-[0.11em] text-ink3">
-            Reopen assurance
+            {settlesOn ? 'Gap cover' : 'Reopen assurance'}
           </span>
           <span className="text-[10px] text-ink3">the only thing you pay for</span>
         </div>

@@ -9,8 +9,8 @@ export function Header({
   setScenarioId: (s: string) => void;
   session: { label: string; isDark: boolean; hoursClosed: number; nyDate: string; nyTime: string };
   atOpen: boolean;
-  mode: 'sim' | 'live';
-  setMode: (m: 'sim' | 'live') => void;
+  mode: 'sim' | 'live' | 'preipo';
+  setMode: (m: 'sim' | 'live' | 'preipo') => void;
 }) {
   const [live, setLive] = useState(() => sessionAt(new Date()));
   useEffect(() => {
@@ -48,7 +48,7 @@ export function Header({
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="mr-2 inline-flex rounded-lg border border-line bg-void p-0.5">
-            {([['sim', 'Simulation'], ['live', 'Live mainnet']] as const).map(([id, label]) => (
+            {([['sim', 'Simulation'], ['live', 'Live mainnet'], ['preipo', 'Pre-IPO']] as const).map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setMode(id)}
@@ -56,9 +56,9 @@ export function Header({
                   mode === id ? 'bg-raised text-ink' : 'text-ink3 hover:text-ink2'
                 }`}
               >
-                {id === 'live' && (
+                {(id === 'live' || id === 'preipo') && (
                   <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${
-                    mode === 'live' ? 'bg-up pulse' : 'bg-ink3'
+                    mode === id ? 'bg-up pulse' : 'bg-ink3'
                   }`} />
                 )}
                 {label}
@@ -105,9 +105,11 @@ export function Header({
           <span className="ml-auto text-[11px] text-ink3">
             {atOpen
               ? 'The auction has printed. Everyone finds out how wrong they were.'
-              : mode === 'live'
-                ? 'Live mainnet prices. Public endpoints, no key, no server.'
-                : 'xStocks keep trading. Price discovery does not.'}
+              : mode === 'preipo'
+                ? 'No exchange. No bell. The gap never closes.'
+                : mode === 'live'
+                  ? 'Live mainnet prices. Public endpoints, no key, no server.'
+                  : 'xStocks keep trading. Price discovery does not.'}
           </span>
         </div>
       </div>
