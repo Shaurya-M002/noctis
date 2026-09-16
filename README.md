@@ -296,6 +296,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — running it from a clean clone, and three toolchain traps that cost us an hour each
 
+- [docs/PREIPO.md](docs/PREIPO.md) — the weekend that never ends: pre-IPO gaps, two issuers disagreeing by 56%, and a σ mistake worth recording
 - [docs/PYTH.md](docs/PYTH.md) — reading Pyth off mainnet keyless, the stale-account trap, and a headline number we had to correct
 - [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
 - [docs/DEVNET.md](docs/DEVNET.md) — the whole lifecycle settled on devnet, every step a clickable transaction
