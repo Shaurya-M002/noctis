@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UNIVERSE, type Asset } from '../data/universe';
 import { sessionAt, type SessionState } from './market';
+import { PYTH_ENABLED } from './flags';
+import { readPyth, type PythRead } from './pyth';
+import {
+  BUILTIN_CALENDAR, cachedCalendar, fetchPythCalendar,
+  type MarketCalendar, type MarketHours,
+} from './schedule';
 import { computeMark, type Mark } from './nyx';
 import { quotePremium, type PremiumQuote, type Tier, type VaultState } from './pricing';
 import {
   dispersionBps, factorsFor, fetchExecutable, fetchSnapshot, fetchVenues,
-  type Executable, type LiveSnapshot, type Venue,
+  type Executable, type LiveSnapshot, type SourceReport, type Venue,
 } from './feeds';
 
 const REFRESH_MS = 30_000;
@@ -27,6 +33,13 @@ export interface LiveState {
   quote: (tier: Tier, notional: number) => PremiumQuote;
   refresh: () => void;
   ageSeconds: number;
+  /** Pyth, read off mainnet on its own independent cycle. */
+  pyth: PythRead | null;
+  calendar: MarketCalendar;
+  marketHours: MarketHours | null;
+  /** Ticking wall clock, so the dark timer counts in real time. */
+  nowMs: number;
+  pythReports: SourceReport[];
 }
 
 /**
@@ -45,6 +58,11 @@ export function useLive(enabled: boolean, sym: string): LiveState {
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [tick, setTick] = useState(0);
   const inflight = useRef(false);
+  const [pyth, setPyth] = useState<PythRead | null>(null);
+  const [calendar, setCalendar] = useState<MarketCalendar>(
+    () => cachedCalendar() ?? BUILTIN_CALENDAR);
+  const [marketHours, setMarketHours] = useState<MarketHours | null>(null);
+  const [schedReport, setSchedReport] = useState<SourceReport | null>(null);
 
   // Real wall clock, ticking, so hoursClosed and hoursToOpen stay honest.
   const [now, setNow] = useState(() => new Date());
@@ -54,7 +72,9 @@ export function useLive(enabled: boolean, sym: string): LiveState {
     return () => clearInterval(t);
   }, [enabled]);
 
-  const session = useMemo(() => sessionAt(now), [now]);
+  // The calendar comes from Pyth when we have it, and falls back to the builtin
+  // set otherwise. Live mode only — simulation and the backtest never see this.
+  const session = useMemo(() => sessionAt(now, calendar), [now, calendar]);
   const lastCloseMs = useMemo(
     () => now.getTime() - session.hoursClosed * 3_600_000,
     [now, session.hoursClosed]);
@@ -84,6 +104,47 @@ export function useLive(enabled: boolean, sym: string): LiveState {
     return () => clearInterval(t);
   }, [enabled, load]);
 
+  // Pyth's schedule. Cached 24h in localStorage, revalidated every 6h.
+  useEffect(() => {
+    if (!enabled || !PYTH_ENABLED) return;
+    let dead = false;
+    const go = () => fetchPythCalendar('AAPL').then((r) => {
+      if (dead) return;
+      setCalendar(r.calendar);
+      setMarketHours(r.marketHours);
+      setSchedReport(r.report);
+    });
+    go();
+    const t = setInterval(go, 6 * 3_600_000);
+    return () => { dead = true; clearInterval(t); };
+  }, [enabled]);
+
+  /**
+   * Pyth prices, on a deliberately separate effect from the Jupiter snapshot.
+   *
+   * Two independent failure domains: if an RPC is having a bad afternoon the Pyth
+   * panel degrades on its own and the rest of live mode never notices. Backs right
+   * off once the feed is dark, because on a Saturday the data is frozen for 48
+   * hours and polling it at 10s is pure waste.
+   */
+  useEffect(() => {
+    if (!enabled || !PYTH_ENABLED) return;
+    let dead = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const cycle = async () => {
+      if (document.visibilityState === 'visible') {
+        const r = await readPyth();
+        if (dead) return;
+        setPyth(r);
+      }
+      const p = Object.values(pythRef.current?.byUnder ?? {})[0];
+      const stale = p ? Date.now() / 1000 - p.publishTime > 900 : false;
+      timer = setTimeout(cycle, stale ? 60_000 : 10_000);
+    };
+    cycle();
+    return () => { dead = true; clearTimeout(timer); };
+  }, [enabled]);
+
   useEffect(() => { if (enabled && tick) load(); }, [tick, enabled, load]);
 
   // Per-venue prints for whichever asset is selected.
@@ -103,6 +164,9 @@ export function useLive(enabled: boolean, sym: string): LiveState {
       .finally(() => { if (!dead) setVenuesLoading(false); });
     return () => { dead = true; };
   }, [enabled, sym, tick]);
+
+  const pythRef = useRef<PythRead | null>(null);
+  pythRef.current = pyth;
 
   /** UNIVERSE re-based on live prices and live depth. */
   const assets: Asset[] = useMemo(() => {
@@ -151,6 +215,10 @@ export function useLive(enabled: boolean, sym: string): LiveState {
   return {
     loading, error, snap, session, assets, marks,
     venues, venuesLoading, dispersion: dispersionBps(venues), executable,
+    pyth, calendar, marketHours, nowMs: now.getTime(),
+    pythReports: schedReport
+      ? [pyth?.report, schedReport].filter(Boolean) as SourceReport[]
+      : (pyth ? [pyth.report] : []),
     quote, refresh: load,
     ageSeconds: snap ? Math.floor((Date.now() - snap.fetchedAt) / 1000) : 0,
   };

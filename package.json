@@ -20,7 +20,8 @@
     "forecast:score": "tsx engine/forecast.ts score",
     "test:all": "cargo test -p noctis --lib && ./scripts/localnet-test.sh && tsx engine/backtest.ts 800 BAND",
     "deploy:devnet": "./scripts/devnet-deploy.sh && cat forecasts/devnet-deploy.log",
-    "devnet:state": "tsx engine/devnet-state.ts"
+    "devnet:state": "tsx engine/devnet-state.ts",
+    "pyth:verify": "node scripts/pyth-verify.mjs"
   },
   "keywords": [],
   "author": "",

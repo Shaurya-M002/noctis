@@ -31,13 +31,19 @@ export interface SessionState {
   nyDate: string;
 }
 
+import { BUILTIN_CALENDAR, ruleFor, type MarketCalendar } from './schedule';
+
 const MS_H = 3_600_000;
 
-/** US market holidays that matter for a 2026 demo. */
-const HOLIDAYS_2026 = new Set([
-  '2026-01-01', '2026-01-19', '2026-02-16', '2026-04-03', '2026-05-25',
-  '2026-06-19', '2026-07-03', '2026-09-07', '2026-11-26', '2026-12-25',
-]);
+/**
+ * Every session question now takes a calendar, and every one defaults to BUILTIN.
+ *
+ * That default is load-bearing. `world.ts` generates the backtest's latent paths
+ * through `informationHoursAhead`; if the calendar it sees ever changed, the TRUTH
+ * would change and every calibration figure quoted in the README would silently
+ * move. Threading the calendar as a defaulted trailing argument means live mode can
+ * use Pyth's while simulation and the backtest provably cannot.
+ */
 
 /** Convert an instant to New York wall-clock parts, DST-correct. */
 export function nyParts(d: Date) {
@@ -60,10 +66,21 @@ export function nyParts(d: Date) {
   };
 }
 
-function isTradingDay(dateISO: string, weekday: string) {
-  if (weekday === 'Sat' || weekday === 'Sun') return false;
-  return !HOLIDAYS_2026.has(dateISO);
+function isTradingDay(dateISO: string, weekday: string, cal: MarketCalendar) {
+  return ruleFor(cal, dateISO, weekday).length > 0;
 }
+
+/** First open and last close of a day, in minutes from ET midnight. */
+function dayBounds(dateISO: string, weekday: string, cal: MarketCalendar) {
+  const rule = ruleFor(cal, dateISO, weekday);
+  return rule.length
+    ? { open: rule[0].open, close: rule[rule.length - 1].close, rule }
+    : { open: 570, close: 960, rule };
+}
+
+/** Extended-hours width around the regular session: 04:00 open, 20:00 close. */
+const PRE_MINUTES = 330;
+const POST_MINUTES = 240;
 
 /** Step a Date by whole days, keeping the same ET wall time. */
 function shiftDays(d: Date, n: number) {
@@ -75,7 +92,7 @@ function shiftDays(d: Date, n: number) {
  * and the next 09:30 ET regular open at or after `now`.
  * Brute force over days: correct across DST without pulling in a tz library.
  */
-function boundaries(now: Date) {
+function boundaries(now: Date, cal: MarketCalendar) {
   const etAt = (base: Date, h: number, min: number) => {
     // Binary-search the UTC instant whose ET wall clock is (base's ET date, h:min).
     const target = nyParts(base);
@@ -97,8 +114,9 @@ function boundaries(now: Date) {
   for (let i = 0; i < 14 && !lastClose; i++) {
     const day = shiftDays(now, -i);
     const p = nyParts(day);
-    if (!isTradingDay(p.dateISO, p.weekday)) continue;
-    const close = etAt(day, 16, 0);
+    if (!isTradingDay(p.dateISO, p.weekday, cal)) continue;
+    const { close: c } = dayBounds(p.dateISO, p.weekday, cal);
+    const close = etAt(day, Math.floor(c / 60), c % 60);
     if (close.getTime() <= now.getTime()) lastClose = close;
   }
 
@@ -106,8 +124,9 @@ function boundaries(now: Date) {
   for (let i = 0; i < 14 && !nextOpen; i++) {
     const day = shiftDays(now, i);
     const p = nyParts(day);
-    if (!isTradingDay(p.dateISO, p.weekday)) continue;
-    const open = etAt(day, 9, 30);
+    if (!isTradingDay(p.dateISO, p.weekday, cal)) continue;
+    const { open: o } = dayBounds(p.dateISO, p.weekday, cal);
+    const open = etAt(day, Math.floor(o / 60), o % 60);
     if (open.getTime() >= now.getTime()) nextOpen = open;
   }
 
@@ -122,33 +141,37 @@ function boundaries(now: Date) {
  * and only ever needs the kind, so doing it the expensive way made an 800-night
  * backtest take minutes. The kind needs one clock read and a holiday lookup.
  */
-export function sessionKindAt(ms: number): SessionKind {
+export function sessionKindAt(ms: number, cal: MarketCalendar = BUILTIN_CALENDAR): SessionKind {
   const p = nyParts(new Date(ms));
   const mins = p.hour * 60 + p.minute;
-  if (!isTradingDay(p.dateISO, p.weekday)) {
-    return HOLIDAYS_2026.has(p.dateISO) ? 'holiday' : 'weekend';
+  const { open, close, rule } = dayBounds(p.dateISO, p.weekday, cal);
+
+  if (!rule.length) {
+    // Saturday/Sunday come from the weekly rules; a closed weekday is a holiday.
+    return p.weekday === 'Sat' || p.weekday === 'Sun' ? 'weekend' : 'holiday';
   }
-  if (mins >= 570 && mins < 960) return 'regular';
-  if (mins >= 240 && mins < 570) return 'premarket';
-  if (mins >= 960 && mins < 1200) return 'afterhours';
+  for (const r of rule) if (mins >= r.open && mins < r.close) return 'regular';
+  if (mins >= open - PRE_MINUTES && mins < open) return 'premarket';
+  if (mins >= close && mins < close + POST_MINUTES) return 'afterhours';
   return p.weekday === 'Fri' ? 'weekend' : 'overnight';
 }
 
-export function sessionAt(now: Date): SessionState {
+export function sessionAt(now: Date, cal: MarketCalendar = BUILTIN_CALENDAR): SessionState {
   const p = nyParts(now);
-  const trading = isTradingDay(p.dateISO, p.weekday);
+  const trading = isTradingDay(p.dateISO, p.weekday, cal);
   const mins = p.hour * 60 + p.minute;
-  const { lastClose, nextOpen } = boundaries(now);
+  const { open: dOpen, close: dClose, rule } = dayBounds(p.dateISO, p.weekday, cal);
+  const { lastClose, nextOpen } = boundaries(now, cal);
 
   const hoursClosed = lastClose ? (now.getTime() - lastClose.getTime()) / MS_H : 0;
   const hoursToOpen = nextOpen ? (nextOpen.getTime() - now.getTime()) / MS_H : 0;
 
   let kind: SessionKind;
   if (!trading) {
-    kind = HOLIDAYS_2026.has(p.dateISO) ? 'holiday' : 'weekend';
-  } else if (mins >= 570 && mins < 960) kind = 'regular';
-  else if (mins >= 240 && mins < 570) kind = 'premarket';
-  else if (mins >= 960 && mins < 1200) kind = 'afterhours';
+    kind = p.weekday === 'Sat' || p.weekday === 'Sun' ? 'weekend' : 'holiday';
+  } else if (rule.some((r) => mins >= r.open && mins < r.close)) kind = 'regular';
+  else if (mins >= dOpen - PRE_MINUTES && mins < dOpen) kind = 'premarket';
+  else if (mins >= dClose && mins < dClose + POST_MINUTES) kind = 'afterhours';
   else kind = 'overnight';
 
   // Friday 20:00 ET onward is already the weekend hole even though Friday is a trading day.
@@ -203,13 +226,15 @@ export function informationHours(hoursClosed: number, kind: SessionKind): number
  * Walk the window instead and sum the weight of whatever session each hour
  * actually falls in.
  */
-export function informationHoursAhead(nowMs: number, hoursToOpen: number): number {
+export function informationHoursAhead(
+  nowMs: number, hoursToOpen: number, cal: MarketCalendar = BUILTIN_CALENDAR,
+): number {
   if (hoursToOpen <= 0) return 0;
   const STEP = 0.5;
   let total = 0;
   for (let h = 0; h < hoursToOpen; h += STEP) {
     const slice = Math.min(STEP, hoursToOpen - h);
-    total += slice * WEIGHT[sessionKindAt(nowMs + h * MS_H)];
+    total += slice * WEIGHT[sessionKindAt(nowMs + h * MS_H, cal)];
   }
   return total;
 }

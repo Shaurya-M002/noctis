@@ -1,13 +1,15 @@
-import type { LiveSnapshot } from '../lib/feeds';
+import type { LiveSnapshot, SourceReport } from '../lib/feeds';
 import { FACTORS } from '../data/universe';
 import { pctSigned } from '../lib/fmt';
 
 /** Every number in live mode, and exactly where it came from. */
 export function Sources({
-  snap, ageSeconds, onRefresh, loading, error,
+  snap, ageSeconds, onRefresh, loading, error, extra = [],
 }: {
   snap: LiveSnapshot | null; ageSeconds: number;
   onRefresh: () => void; loading: boolean; error: string | null;
+  /** Reports from feeds on their own cycle, e.g. Pyth. */
+  extra?: SourceReport[];
 }) {
   return (
     <div className="space-y-3.5">
@@ -30,7 +32,7 @@ export function Sources({
       )}
 
       <div className="space-y-1.5">
-        {(snap?.sources ?? []).map((s) => (
+        {[...(snap?.sources ?? []), ...extra].map((s) => (
           <div key={s.name} className="rounded-lg border border-line bg-void/50 px-2.5 py-2">
             <div className="flex items-baseline justify-between gap-2">
               <span className="flex items-center gap-1.5 text-[11.5px] text-ink">

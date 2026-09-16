@@ -7,6 +7,7 @@ import { PriceHero } from './components/PriceHero';
 import { BandChart } from './components/BandChart';
 import { VenueChart } from './components/VenueChart';
 import { Sources } from './components/Sources';
+import { PythMark } from './components/PythMark';
 import { Waterfall } from './components/Waterfall';
 import { Ticket } from './components/Ticket';
 import { Receipts } from './components/Receipts';
@@ -111,6 +112,28 @@ function LiveView({
         </Panel>
 
         <Panel
+          title="Pyth, read straight off Solana mainnet"
+          sub="PriceUpdateV2 decoded in your browser. Hermes needs an API key now; the chain does not."
+          right={(() => {
+            const p = live.pyth?.byUnder[asset.under];
+            const st = p ? (live.nowMs / 1000 - p.publishTime <= 60 ? 'PUBLISHING'
+              : live.nowMs / 1000 - p.publishTime <= 900 ? 'LAGGING' : 'DARK') : '—';
+            return (
+              <span className={`chip ${st === 'PUBLISHING' ? 'border-up/50 text-up'
+                : st === 'DARK' ? 'border-warn/50 text-warn' : 'border-line2 text-ink3'}`}>
+                {st}
+              </span>
+            );
+          })()}
+        >
+          <PythMark
+            read={live.pyth} under={asset.under} sym={sym} session={live.session}
+            calendar={live.calendar} chainPrice={l.onChain}
+            noctisMark={mark.mid} nowMs={live.nowMs}
+          />
+        </Panel>
+
+        <Panel
           title="Where the same token is printing right now"
           sub="Quoted pool prices, and — separately — what the router will actually fill."
           right={live.dispersion > 0 && (
@@ -136,7 +159,8 @@ function LiveView({
         </Panel>
         <Panel title="Data sources" sub="Public, keyless, and checkable.">
           <Sources snap={live.snap} ageSeconds={live.ageSeconds}
-                   onRefresh={live.refresh} loading={live.loading} error={live.error} />
+                   onRefresh={live.refresh} loading={live.loading} error={live.error}
+                   extra={live.pythReports} />
         </Panel>
       </div>
     </div>
@@ -287,10 +311,9 @@ function SettleBanner({
 
 function Gap() {
   const rows = [
-    { k: 'Regular session', h: 32.5, tone: 'bg-truth' },
-    { k: 'Extended hours', h: 40, tone: 'bg-tape' },
-    { k: 'Overnight (24/5 feeds)', h: 30, tone: 'bg-warn/70' },
-    { k: 'Weekend + holidays', h: 65.5, tone: 'bg-down' },
+    { k: 'Exchange in session', h: 32.5, tone: 'bg-truth' },
+    { k: 'Exchange shut, Pyth still publishing', h: 87.5, tone: 'bg-tape' },
+    { k: 'Nothing anywhere', h: 48, tone: 'bg-down' },
   ];
   return (
     <div className="space-y-2">
@@ -309,8 +332,12 @@ function Gap() {
         </div>
       ))}
       <p className="border-t border-line pt-2 text-[10px] leading-snug text-ink3">
-        Pyth Pro covers pre-market through overnight — <em>24/5</em>. The 65.5-hour
-        weekend is the hole Noctis is built for, and it is 39% of the week.
+        We used to call the hole 65.5 hours — the exchange bell to bell. Then we
+        measured Pyth: its equity feeds run Sunday 20:00 ET to Friday 20:00 ET
+        continuously, so they cover 17.5 of those hours. The window where neither
+        the exchange nor the oracle says anything is <em>48 hours</em>, every
+        weekend. Smaller than we claimed, and now a measured number rather than a
+        calendar subtraction.
       </p>
     </div>
   );
