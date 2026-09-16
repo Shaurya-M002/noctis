@@ -108,6 +108,15 @@ await say('<b>Over a thousand basis points apart</b>, and nothing closes it —<
   + '<i>"The on-chain price" is not one number. On a weekend it is barely a price.</i>', 6200);
 await hush();
 
+await to('text=PYTH, READ STRAIGHT OFF SOLANA MAINNET', 240);
+await say('And this is Pyth — decoded out of a Solana account, in your browser.'
+  + '<i>Hermes needs an API key now and equities are the $2,500-a-month tier. The same numbers are on mainnet for free.</i>', 6000);
+await say('Two questions people conflate, shown separately.'
+  + '<i>The exchange session comes from Pyth’s own schedule string. Whether the feed is alive comes from publish_time. On a weeknight those disagree — and they should.</i>', 6600);
+await say('We measured the feed instead of trusting the marketing.'
+  + '<i>24,000 on-chain writes, one gap in five days: 48 hours exactly, Friday 20:00 to Sunday 20:00 ET. So the hole is 48 hours, not the 65.5 we had been claiming. We corrected it.</i>', 7200);
+await hush();
+
 await to('text=DATA SOURCES', 220);
 await say('Where every number came from, with latency. And where it didn\'t:'
   + '<i>no free always-on dollar index, so FX reads "no source" and σ widens by the full move it would have explained. Missing data should make a model less confident, not accidentally more.</i>', 6600);
@@ -210,6 +219,22 @@ await say('Which made the product <b>cheaper</b>, not dearer.'
 await hush();
 
 // ───────────────────────────────────────────── scene 7: the bug we found
+// ───────────────────────────────────────── pre-IPO
+await page.evaluate(() => window.scrollTo({ top: 0 }));
+await page.getByRole('button', { name: 'Pre-IPO' }).click();
+await wait(13000);
+await say('Now take the bell away entirely.', 3000);
+await say('Pre-IPO tokens have <b>no exchange at all</b>. No close, no auction, ever —'
+  + '<br>only a mark the issuer publishes, and a token that disagrees with it.'
+  + '<i>It is the weekend, permanently.</i>', 6200);
+await hush();
+
+await to('text=EVERY NAME, AND EVERY DISAGREEMENT', 250);
+await say('Across xStocks the weekend gap spans about one and a half points.<br>Here it spans <b>thirty</b>.', 4400);
+await say('And a second issuer tokenises three of the same companies.'
+  + '<i>They disagree by 21% on OpenAI. 56% on Kalshi. 59% on SpaceX. Nobody knows what these are worth to within a factor of two — and that is not noise to smooth away, it is the honest width of the answer.</i>', 7400);
+await hush();
+
 await card('One more thing.',
   'We went looking for holes in our own settlement path.<br><span class="k">We found one.</span>', 4000);
 

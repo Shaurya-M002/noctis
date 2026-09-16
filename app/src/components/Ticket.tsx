@@ -118,7 +118,14 @@ export function Ticket({
                     {tq.premium > 0 ? usd(tq.premium) : 'free'}
                   </span>
                 </div>
-                <div className="mt-1 text-[10.5px] leading-snug text-ink3">{t.blurb}</div>
+                <div className="mt-1 text-[10.5px] leading-snug text-ink3">
+                  {/* Pre-IPO has no auction, so the default copy would be a lie. */}
+                  {settlesOn && t.id === 'PIN'
+                    ? `You are made whole to ${settlesOn}. Zero gap risk.`
+                    : settlesOn && t.id === 'BAND'
+                      ? 'You eat the first 1σ of gap movement. The vault pays every basis point beyond it.'
+                      : t.blurb}
+                </div>
                 {tq.premium > 0 && (
                   <div className="mt-1 num text-[10px] text-ink3">
                     {bps(tq.bps)} of notional · worst case {usd(tq.maxAdverse)}

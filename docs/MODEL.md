@@ -116,8 +116,8 @@ the price to better than 12%, the correct product is silence.
 
 ## Information time
 
-Calendar hours are the wrong clock. 65.5 hours of weekend is not ten trading days
-of news; it is about one and a quarter.
+Calendar hours are the wrong clock. A weekend's worth of them is not ten trading
+days of news; it is about one and a quarter.
 
 ```
 informationHours(h, session) = h · weight[session]

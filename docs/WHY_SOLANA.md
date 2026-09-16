@@ -6,7 +6,7 @@ below are the ones that stop working the moment you do.
 ## 1. The problem only exists because the asset is on-chain
 
 An equity that only trades 09:30–16:00 has no weekend pricing problem — nobody can
-transact. The 65.5-hour hole is created *by* tokenization: xStocks, Kraken's 700+
+transact. The hole is created *by* tokenization: xStocks, Kraken's 700+
 tokenized names, and every AMM holding them are open all weekend. Solana is where
 ~82% of tokenized equity volume actually is. This is not a problem we brought to
 the chain; it is one the chain created and has to solve.

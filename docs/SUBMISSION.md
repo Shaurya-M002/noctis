@@ -41,7 +41,11 @@ its own schedule marks Saturday and Sunday `C`. The last official
 close ignores everything since Friday. The 24/7 book is one $40k order and tens of
 basis points wide, with no cash-equity arbitrage available to pull it back. Pyth
 Pro's overnight feeds close most of the weekday hole — 24/**5** — and leave the
-65.5-hour weekend, which is 39% of the week.
+weekend. We measured how much: Pyth's equity feeds run Sunday 20:00 ET to Friday
+20:00 ET continuously and then stop for exactly 48 hours. That 48-hour window —
+where neither the exchange nor an oracle says anything — is the one Noctis is for.
+We originally claimed 65.5 hours, bell to bell, and corrected it after walking
+24,000 on-chain writes.
 
 Noctis does two things.
 
@@ -57,6 +61,31 @@ made whole to the official opening print. Priced as what it is — a one-sided o
 on the overnight gap — quoted in dollars, itemised. Because the payout depends only
 on two published numbers, settlement is one permissionless instruction with no
 claims adjuster.
+
+## Bounties we are entering
+
+**Best Use of Pyth Market Data.** Pyth is not a logo on this submission, it is load
+bearing. The market calendar is parsed from Pyth's own schedule string, replacing a
+holiday list we had typed by hand. The equity prices are decoded from
+`PriceUpdateV2` accounts on Solana mainnet in the browser — Hermes now needs a key
+and equities sit in the Pro tier, but the chain is free. And the 48-hour figure that
+the whole pitch now rests on came from measuring Pyth's feed rather than assuming
+anything about it. `docs/PYTH.md` has the account table, the stale-account trap that
+would have rendered a price 8.4% wrong, and `npm run pyth:verify` to re-derive it.
+
+We also corrected a claim in our own favour because of this work: we had written
+that Pyth's equity feeds report `MARKET_CLOSED` during our window. They do not —
+they publish 24/5 and we verified it ticking every 15 seconds pre-market. Pyth
+covers more than we credited, and the honest version of our argument is narrower
+and stronger.
+
+**Best Use of PreStocks.** A third mode built on the eight PreStocks names, using
+Jupiter for the mark and the on-chain price and Tessera as a second witness on the
+three companies both issuers tokenise. `docs/PREIPO.md`.
+
+Not entering Meteora DBC or Clawpump — both require launching a token, which this
+project deliberately does not have. `docs/COMPETITION.md` explains why rather than
+bolting something on.
 
 ## Who actually uses this
 
@@ -104,11 +133,14 @@ a weekend where the vault loses and we earn nothing.
 - **15 on-chain lifecycle tests** on a real validator, 0 failing —
   `./scripts/localnet-test.sh`.
 - **12 Rust unit tests** on the premium and settlement math.
-- **The demo app**, in two modes. *Simulation*: the four answers side by side, a
+- **The demo app**, in three modes. *Simulation*: the four answers side by side, a
   scrubbable weekend, full return attribution and variance budget, the ticket,
   receipts, the vault, and the backtest. *Live mainnet*: the same model on real
-  Jupiter / DexScreener / Coinbase data, keyless and fetched from the browser,
-  with every source's status and latency on screen.
+  Jupiter / DexScreener / Coinbase / Pyth data, keyless and fetched from the
+  browser, with every source's status and latency on screen. *Pre-IPO*: eight
+  PreStocks names where no exchange exists at all, with a rival issuer's marks for
+  cross-checking and a NAV-gap cover priced off a σ measured from our own recorded
+  log.
 - **A backtest that can embarrass us**, in the UI and as a CLI.
 - **Timestamped forecasts committed to git before their outcomes existed**
   (`forecasts/marks.jsonl`), with a scorer that reads what actually happened. You

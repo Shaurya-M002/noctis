@@ -30,10 +30,25 @@ Sunday and you get one of three bad answers:
 | The 24/7 order book | last trade | one $40k order, 26–60 bps to cross, no arb available to pull it back |
 
 Pyth Pro now covers pre-market through overnight — **24/5**. That is real progress
-and it closes most of the weekday hole. It does not cover the **65.5-hour weekend**,
-which is 39% of the week, and it does not cover holidays.
+and it closes most of the weekday hole — more of it than we first credited. We
+measured the feed rather than trusting the marketing: it runs **Sunday 20:00 ET to
+Friday 20:00 ET continuously**, right through every weeknight, and then stops for
+exactly **48 hours**. So the window where neither the exchange nor an oracle says
+anything is 48 hours a week, not the 65.5 we originally claimed. Smaller, and now a
+measured number rather than a calendar subtraction — see [docs/PYTH.md](docs/PYTH.md).
 
 That gap is what Noctis is for.
+
+## Three modes
+
+The demo has one toggle in the header, and the three settings are three different
+answers to the same question — *what is this worth when nothing is quoting it?*
+
+| mode | what it is |
+|---|---|
+| **Simulation** | a scrubbable synthetic weekend with a known latent truth, so the model can be scored. Every calibration figure in this README comes from here. |
+| **Live mainnet** | real xStocks from Jupiter and DexScreener, real equity prices decoded out of Pyth's Solana accounts, real router quotes. No key, no server. |
+| **Pre-IPO** | eight PreStocks names where the weekend never ends — no exchange, no bell, and a second issuer publishing marks that disagree by up to 56%. |
 
 ## Live, on mainnet, right now
 

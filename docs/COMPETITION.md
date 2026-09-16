@@ -65,7 +65,8 @@ The real distinction is narrower and survives:
 **Pyth Pro** covers pre-market through overnight — 24/**5**, sourced from
 institutions active in those sessions. That closes most of the weekday hole
 properly and is better than anything we could build. It does not cover the
-65.5-hour weekend or holidays, which is the hole we are in.
+48-hour weekend gap in its own on-chain feed, or holidays. That 48 hours — measured
+by walking 24,000 writes, not inferred — is the hole we are in.
 
 ## Ostium / Stork — the incumbent answer, and why we disagree
 

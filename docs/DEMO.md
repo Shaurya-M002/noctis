@@ -14,8 +14,9 @@ Everything is deterministic. Same seed, same numbers, every run.
 > self-custody, xStocks trade all 168 — the DEXs never close.
 
 Point at **THE HOLE** in the left rail. Regular session 32.5h, extended 40h,
-overnight 30h — Pyth Pro covers that far, 24/5. **Weekend and holidays: 65.5h.**
-Nobody covers it, and it is 39% of the week.
+overnight — Pyth covers all of that, Sunday 20:00 ET to Friday 20:00 ET, measured.
+Then it stops for **48 hours**. That is the window where neither the exchange nor an
+oracle says anything, and it is 29% of the week.
 
 ## 1 · Four answers, none of them a price (25s)
 
@@ -125,7 +126,7 @@ seed-checked.
 
 ## If you only have 60 seconds
 
-1. THE HOLE — 65.5 hours a week with no price. (10s)
+1. THE HOLE — 48 hours a week with no price from anyone. (10s)
 2. Four answers, one of which has an error bar. (15s)
 3. The ticket: $0.00 commission, three tiers of certainty. (15s)
 4. Run the auction. Three identical trades, three outcomes; Pin's loss is exactly
