@@ -21,7 +21,7 @@ Nobody covers it, and it is 39% of the week.
 
 Saturday 10:00 ET, AAPLx.
 
-- Pyth / Chainlink: `MARKET_CLOSED`. Honest, and useless.
+- Pyth: live all week — but its schedule marks the weekend closed, and the feed stops.
 - Last official close: 231.04, frozen since Friday.
 - The 24/7 book: a last trade and 26 bps to cross.
 - **Noctis: 230.84 ± 2.39.**
@@ -29,7 +29,7 @@ Saturday 10:00 ET, AAPLx.
 > Not a last trade. A conditional expectation of Monday's opening print, published
 > with a σ that is a forecast error for that auction — not, as with Pyth's
 > confidence interval, a snapshot of how much publishers disagree right now. And
-> published in a window where Pyth's equity feed says `MARKET_CLOSED`.
+> published across the weekend, when Pyth's own schedule says the venue is shut.
 
 ## 2 · σ breathes (20s)
 

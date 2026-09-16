@@ -36,7 +36,8 @@ point rather than softening it: the venue that could manage weekend risk is shut
 and the one that stays open has no risk desk.
 
 So for four fifths of the week the asset changes hands at a price no venue on
-earth is producing. Pyth and Chainlink return `MARKET_CLOSED`. The last official
+earth is producing. Pyth covers 24/5 beautifully and then stops for the weekend —
+its own schedule marks Saturday and Sunday `C`. The last official
 close ignores everything since Friday. The 24/7 book is one $40k order and tens of
 basis points wide, with no cash-equity arbitrage available to pull it back. Pyth
 Pro's overnight feeds close most of the weekday hole — 24/**5** — and leave the
@@ -173,7 +174,9 @@ price off Chainlink's last print, which during the dark window is Friday's close
 An earlier draft of ours said σ was "the number every other oracle omits," which
 was simply wrong. The surviving distinction: Pyth's `conf` is publisher
 disagreement *right now*; ours is forecast error for a *specific future auction*.
-And Pyth's equity feeds read `MARKET_CLOSED` during the window we exist for.
+And Pyth's equity feeds stop publishing across the weekend, which is the window we
+exist for. (They do publish pre-market and overnight — we initially claimed
+otherwise and corrected it after checking the chain.)
 
 What we believe is new: publishing a forecast σ for the reopening print and
 pricing a product off it, so model calibration and protocol revenue are the same

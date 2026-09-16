@@ -13,3 +13,4 @@ media/*.webm
 forecasts/cron.log
 forecasts/launchd.log
 forecasts/devnet-deploy.log
+forecasts/prestocks-cron.log

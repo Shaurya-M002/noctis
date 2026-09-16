@@ -59,7 +59,8 @@ The real distinction is narrower and survives:
   ([arXiv 2608.09188](https://arxiv.org/html/2608.09188) makes this case formally:
   cross-venue agreement is not price discovery.)
 - And during the window Noctis exists for, Pyth's US equity feeds are marked
-  `MARKET_CLOSED`. There is no price for a confidence interval to attach to.
+  publishing at all from Friday 16:00 ET — its schedule marks Sat/Sun `C`. There is
+  no price for a confidence interval to attach to.
 
 **Pyth Pro** covers pre-market through overnight — 24/**5**, sourced from
 institutions active in those sessions. That closes most of the weekday hole

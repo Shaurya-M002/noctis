@@ -25,7 +25,7 @@ Sunday and you get one of three bad answers:
 
 | | answer | why it's bad |
 |---|---|---|
-| Pyth / Chainlink equity feed | `MARKET_CLOSED` | honest, and useless — there is no executable price |
+| Pyth equity feed | ticks 24/**5**, then stops Friday 16:00 ET | excellent all week; silent for the 65.5-hour weekend |
 | Last official close | Friday's number | ignores everything that has happened since |
 | The 24/7 order book | last trade | one $40k order, 26–60 bps to cross, no arb available to pull it back |
 
@@ -106,10 +106,15 @@ To be precise about the incumbent, because it matters: **Pyth already publishes 
 confidence interval** — it is the one oracle that does, and it deserves the credit.
 But two things differ. Pyth's `conf` is a *snapshot of disagreement between
 publishers right now*; Noctis's σ is a *forecast error for a specific future
-event*, the reopening auction. And Pyth's equity feeds are marked `MARKET_CLOSED`
-during exactly the window Noctis exists for — there is no price to attach a
-confidence to. Noctis is not "the oracle with error bars." It is an error bar for
-the hours the other oracles are dark.
+event*, the reopening auction. And Pyth's schedule marks the weekend `C` — closed —
+so its equity feeds stop publishing from Friday 16:00 ET until Monday. Noctis is not
+"the oracle with error bars." It is an error bar for the hours the other oracles are
+dark, and it resolves back to Pyth at the bell.
+
+Worth being exact, because we got this wrong at first: Pyth's equity feeds **do**
+publish outside 09:30–16:00. At 08:25 ET on a Wednesday, `Equity.US.AAPL/USD` was
+updating every ~15 seconds with a live confidence band. 24/5 is real and it is good.
+The hole is the weekend, not the overnight.
 
 **2. It sells certainty about the reopening print, and nothing else.**
 
