@@ -25,7 +25,7 @@ Sunday and you get one of three bad answers:
 
 | | answer | why it's bad |
 |---|---|---|
-| Pyth equity feed | ticks 24/**5**, then stops Friday 16:00 ET | excellent all week; silent for the 65.5-hour weekend |
+| Pyth equity feed | ticks Sun 20:00 → Fri 20:00 ET, then stops | excellent all week; silent for 48 hours every weekend |
 | Last official close | Friday's number | ignores everything that has happened since |
 | The 24/7 order book | last trade | one $40k order, 26–60 bps to cross, no arb available to pull it back |
 
@@ -296,6 +296,7 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — running it from a clean clone, and three toolchain traps that cost us an hour each
 
+- [docs/PYTH.md](docs/PYTH.md) — reading Pyth off mainnet keyless, the stale-account trap, and a headline number we had to correct
 - [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
 - [docs/DEVNET.md](docs/DEVNET.md) — the whole lifecycle settled on devnet, every step a clickable transaction
 - [docs/SECURITY.md](docs/SECURITY.md) — threat model, and the critical bug we found in our own settlement path

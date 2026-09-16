@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1680, height: 1100 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text().slice(0,160));});
+await p.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
+await p.getByRole('button', { name: 'Live mainnet' }).click();
+await p.waitForTimeout(14000);
+const sec = p.locator('section', { hasText: 'PYTH, READ STRAIGHT OFF SOLANA MAINNET' }).last();
+await sec.scrollIntoViewIfNeeded(); await p.waitForTimeout(600);
+await sec.screenshot({ path: 'media/11-pyth.png' });
+console.log('errors:', errs.length ? errs.slice(0,3).join(' | ') : '(none)');
+console.log((await sec.innerText()).slice(0, 700));
+await b.close();
