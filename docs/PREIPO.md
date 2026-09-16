@@ -57,6 +57,62 @@ The recorder runs in node, which has no such restriction, so the committed log i
 the only route cross-issuer data has into a static page. The app reads it back from
 `raw.githubusercontent.com`, which is CORS-open and always current.
 
+## Calibration: what 38 days of candles can and cannot tell you
+
+GeckoTerminal serves free, keyless, CORS-open hourly OHLCV going back over a month
+for every one of these pools. So the **token** half of the gap is fully observable
+in history. The **mark** half is not.
+
+The tempting move is to proxy the mark with a slow EMA of the token — a
+secondary-market mark is a smoothed traded price, after all. We built it, then
+checked the proxy against the live marks:
+
+| | real gap now | EMA-168h proxy says |
+|---|---|---|
+| OpenAI | **+0.62%** | −13.73% |
+| Anthropic | **−4.44%** | −23.28% |
+
+Badly wrong, and wrong in a revealing way. The issuer's mark tracks the token far
+more closely than a weekly EMA — nearer a 6-to-24-hour one. So the mark is not a
+slow independent estimate at all; it co-moves with the same secondary market the
+token follows. Calibrating off that proxy produced a 37–70% σ for a seven-day
+cover, and essentially all of it was the proxy's error rather than the gap's
+volatility.
+
+We deleted it. A reconstructed gap history would have been invented data, and this
+project has been careful not to ship any.
+
+**What the candles do honestly establish** is how volatile the token is, with real
+volume behind it — the largest hourly move in the OpenAI window is 29%, on $107k of
+volume, and the biggest volume hour is $1.25M. Candles under $1k of volume are
+dropped, because a candle with no trade behind it is a quote, not a price. That
+gives a hard ceiling: **the gap cannot move faster than its two legs**, and one leg
+is measured.
+
+So σ takes the tightest of four readings and names which one binds:
+
+```
+diffusion, from our own log        23.55%
+the band the gap sits in            1.51%
+token vol, 38d of candles          43.39%
+→ floor, we will not claim tighter  2.00%
+```
+
+### Scoring it
+
+The pre-IPO log cannot score a seven-day move — nothing has been held that long.
+But it can score the horizon it *is* old enough for, and the panel does:
+
+```
+WHAT WE CAN SCORE — 39 min horizon
+realised σ        0.70%
+inside ±1σ         71%  of 17 moves      (a calibrated σ gives 68%)
+```
+
+That is the same discipline as the equity backtest, applied at the only horizon
+this log can currently answer, and it improves every five minutes. The longer
+horizons say **not calibrated** in as many words until they are.
+
 ## Sigma, and a mistake worth recording
 
 The obvious estimator is the per-sample step deviation scaled by √t. The first

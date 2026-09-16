@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchPreIPO, gapSigma, type PreIPOSnapshot } from './preipo';
+import { tokenVolatility, type TokenVol } from './gapcal';
+import { preBySym } from '../data/preipo';
 import { quotePremium, type PremiumQuote, type Tier, type VaultState } from './pricing';
 
 const REFRESH_MS = 60_000;
@@ -15,6 +17,8 @@ export interface PreIPOState {
   setHorizonDays: (d: number) => void;
   refresh: () => void;
   ageSeconds: number;
+  /** 38 days of real candles for the selected name. An upper bound on the gap. */
+  vol: TokenVol | null;
   /** Cover on the NAV gap, priced by the same formula the chain runs. */
   quote: (tier: Tier, notional: number) => PremiumQuote & {
     sigma: number; basis: string; confident: boolean;
@@ -28,6 +32,7 @@ export function usePreIPO(enabled: boolean): PreIPOState {
   const [sym, setSym] = useState('OPENAI');
   const [horizonDays, setHorizonDays] = useState(7);
   const [, setTick] = useState(0);
+  const [vol, setVol] = useState<TokenVol | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,8 +52,22 @@ export function usePreIPO(enabled: boolean): PreIPOState {
     return () => clearInterval(t);
   }, [enabled, load]);
 
+  // Candle history for the selected name only — GeckoTerminal's free tier is
+  // rate-limited, and one name at a time is plenty for a panel.
+  useEffect(() => {
+    if (!enabled) return;
+    let dead = false;
+    const p = preBySym(sym);
+    if (!p) return;
+    setVol(null);
+    tokenVolatility(sym, p.mint, horizonDays * 24)
+      .then((v) => { if (!dead) setVol(v); })
+      .catch(() => { if (!dead) setVol(null); });
+    return () => { dead = true; };
+  }, [enabled, sym, horizonDays]);
+
   const quote = useCallback((tier: Tier, notional: number) => {
-    const g = gapSigma(snap?.stats[sym], horizonDays * 24);
+    const g = gapSigma(snap?.stats[sym], horizonDays * 24, vol?.horizonSd);
     const q = snap?.quotes.find((x) => x.sym === sym);
     return {
       ...quotePremium({
@@ -57,12 +76,12 @@ export function usePreIPO(enabled: boolean): PreIPOState {
       }),
       sigma: g.sigma, basis: g.basis, confident: g.confident,
     };
-  }, [snap, sym, horizonDays]);
+  }, [snap, sym, horizonDays, vol]);
 
   return {
     loading, error, snap, sym, setSym, horizonDays, setHorizonDays,
     refresh: load,
     ageSeconds: snap ? Math.floor((Date.now() - snap.fetchedAt) / 1000) : 0,
-    quote,
+    vol, quote,
   };
 }

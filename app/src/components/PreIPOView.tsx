@@ -19,7 +19,8 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
   const snap = s.snap;
   const q = snap?.quotes.find((x) => x.sym === s.sym);
   const st = snap?.stats[s.sym];
-  const g = useMemo(() => gapSigma(st, s.horizonDays * 24), [st, s.horizonDays]);
+  const g = useMemo(() => gapSigma(st, s.horizonDays * 24, s.vol?.horizonSd),
+                    [st, s.horizonDays, s.vol]);
 
   if (!snap || !q) {
     return (
@@ -211,27 +212,53 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
               <span className="text-[11px] text-ink2">σ of the gap at {s.horizonDays}d</span>
               <span className="num text-[15px] text-mark">{pct(g.sigma)}</span>
             </div>
-            <p className="mt-1.5 text-[10px] leading-snug text-ink3">
-              {g.basis === 'none'
-                ? 'No recorded history for this name yet — a placeholder, not an estimate.'
-                : <>From <span className="num">{st?.n}</span> samples over{' '}
-                   <span className="num">{st?.hours.toFixed(1)}h</span> of our own recorded log.
-                   {g.basis === 'stationary'
-                     ? <> Bounded by the width the gap actually oscillates in
-                       (<span className="num">{pct(g.stationary)}</span>), because a
-                       mean-reverting gap does not spread like √t — the naive diffusion
-                       reading would say <span className="num">{pct(g.diffusion)}</span>.</>
-                     : g.basis === 'floor'
-                       ? <> Both readings came in under our {pct(0.02)} floor, and we will
-                         not claim more precision than that about an asset with no exchange.</>
-                       : <> Short enough a horizon that diffusion is the tighter bound.</>}</>}
+
+            <div className="mt-2 space-y-1 border-t border-line pt-2 text-[10px]">
+              <Cand label="diffusion, from our log" v={g.diffusion} win={g.basis === 'diffusion'} />
+              <Cand label="the band the gap sits in" v={g.stationary} win={g.basis === 'stationary'} />
+              <Cand label="token vol, 38d of candles" v={g.tokenBound ?? 0} win={g.basis === 'token'} />
+              <Cand label="floor — we will not claim tighter" v={0.02} win={g.basis === 'floor'} />
+            </div>
+
+            <p className="mt-2 border-t border-line pt-2 text-[10px] leading-snug text-ink3">
+              Four readings, and we take the tightest that is still defensible. The
+              gap cannot move faster than its two legs, and one of them —{' '}
+              {s.vol ? <>the token, over{' '}
+                <span className="num">{s.vol.days.toFixed(0)}</span> days of candles
+                with <span className="num">{compact(s.vol.medianHourlyVolume)}</span>{' '}
+                median hourly volume</> : 'the token'} — is measurable. That ceiling is
+              real data; the rest is bounded by it.
             </p>
+
             {!g.confident && (
               <p className="mt-1.5 border-t border-warn/20 pt-1.5 text-[10px] leading-snug text-warn">
-                Not calibrated. Hours of five-minute samples show structure, not a
-                distribution — we would want days. The log is still recording and the
-                sample count above is live.
+                Not calibrated at this horizon. {st?.n ?? 0} samples over{' '}
+                {(st?.hours ?? 0).toFixed(1)}h of our own log cannot score a{' '}
+                {s.horizonDays}-day move — nothing has been held that long yet. The
+                recorder is still running and this box updates with it.
               </p>
+            )}
+
+            {st?.realised && (
+              <div className="mt-2 rounded border border-line bg-panel/60 p-2">
+                <div className="mb-1 text-[9.5px] font-medium uppercase tracking-[0.1em] text-ink3">
+                  What we CAN score — {(st.scorableHours * 60).toFixed(0)} min horizon
+                </div>
+                <div className="flex items-baseline justify-between text-[10.5px]">
+                  <span className="text-ink3">realised σ</span>
+                  <span className="num text-ink">{pct(st.realised.sigma)}</span>
+                </div>
+                <div className="flex items-baseline justify-between text-[10.5px]">
+                  <span className="text-ink3">inside ±1σ</span>
+                  <span className={`num ${Math.abs(st.realised.coverage1 - 0.68) < 0.12 ? 'text-up' : 'text-warn'}`}>
+                    {pct(st.realised.coverage1, 0)} <span className="text-ink3">of {st.realised.n}</span>
+                  </span>
+                </div>
+                <p className="mt-1 text-[9.5px] leading-snug text-ink3">
+                  A calibrated σ gives 68%. This is the same check the equity backtest
+                  runs, at the only horizon this log is old enough to answer.
+                </p>
+              </div>
             )}
           </div>
 
@@ -250,6 +277,15 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
           </p>
         </Panel>
       </div>
+    </div>
+  );
+}
+
+function Cand({ label, v, win }: { label: string; v: number; win: boolean }) {
+  return (
+    <div className={`flex items-baseline justify-between ${win ? 'text-mark' : 'text-ink3'}`}>
+      <span>{win ? '→ ' : '   '}{label}</span>
+      <span className="num">{(v * 100).toFixed(2)}%</span>
     </div>
   );
 }

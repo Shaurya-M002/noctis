@@ -62,6 +62,10 @@ export interface GapStats {
   levelSd: number;
   /** Distinct token prices seen. A low count against many samples means stale. */
   distinctTokens: number;
+  /** The longest horizon our own log can actually score, in hours. */
+  scorableHours: number;
+  /** Realised |Δgap| at that horizon, and how our sigma did against it. */
+  realised: { n: number; meanAbs: number; sigma: number; coverage1: number } | null;
 }
 
 export interface PreIPOSnapshot {
@@ -150,10 +154,27 @@ function statsFrom(rows: any[]): { stats: Record<string, GapStats>; hours: numbe
     }
     if (gaps.length < 3) continue;
     const ret = (xs: number[]) => xs.slice(1).map((v, i) => Math.log(v / xs[i]));
+    // Score sigma against realised moves at the longest horizon the log supports.
+    // With hours of five-minute samples that is minutes, not days — but it is a
+    // real out-of-sample check, and it grows every time the recorder fires.
+    const H = Math.max(1, Math.floor((gaps.length - 1) / 3));
+    const moves: number[] = [];
+    for (let i = 0; i + H < gaps.length; i++) moves.push(gaps[i + H] - gaps[i]);
+    const realised = moves.length >= 5 ? (() => {
+      const meanAbs = moves.reduce((a, b) => a + Math.abs(b), 0) / moves.length;
+      const sg = meanAbs / 0.7978845608;
+      return {
+        n: moves.length, meanAbs, sigma: sg,
+        coverage1: moves.filter((x) => Math.abs(x) <= sg).length / moves.length,
+      };
+    })() : null;
+
     stats[p.sym] = {
       sym: p.sym,
       n: gaps.length,
       hours,
+      scorableHours: H * (hours / Math.max(1, gaps.length - 1)),
+      realised,
       stepSd: sd(ret(gaps.map((g) => Math.exp(g)))),
       meanGap: gaps.reduce((a, b) => a + b, 0) / gaps.length,
       levelSd: sd(gaps),
@@ -262,7 +283,7 @@ export async function fetchPreIPO(): Promise<PreIPOSnapshot> {
  * and use its actual reversion speed. The UI shows the sample count so the
  * distinction is never hidden.
  */
-export type SigmaBasis = 'diffusion' | 'stationary' | 'floor' | 'none';
+export type SigmaBasis = 'diffusion' | 'stationary' | 'token' | 'floor' | 'none';
 
 /** Our window is short, so the range we have seen understates the true one. */
 const WIDEN = 3;
@@ -270,28 +291,37 @@ const WIDEN = 3;
 const FLOOR = 0.02;
 const CAP = 0.35;
 
-export function gapSigma(s: GapStats | undefined, horizonHours: number): {
+export function gapSigma(
+  s: GapStats | undefined, horizonHours: number, tokenBound?: number,
+): {
   sigma: number; basis: SigmaBasis; confident: boolean;
-  diffusion: number; stationary: number;
+  diffusion: number; stationary: number; tokenBound: number | null;
 } {
   if (!s || s.n < 3) {
-    return { sigma: 0.05, basis: 'none', confident: false, diffusion: 0, stationary: 0 };
+    return {
+      sigma: 0.05, basis: 'none', confident: false,
+      diffusion: 0, stationary: 0, tokenBound: tokenBound ?? null,
+    };
   }
   const perSample = s.hours / Math.max(1, s.n - 1);
   const steps = Math.max(1, horizonHours / Math.max(perSample, 1e-6));
   const diffusion = s.stepSd * Math.sqrt(steps);
   const stationary = s.levelSd * WIDEN;
 
-  const bounded = Math.min(diffusion, stationary);
+  // The gap cannot move faster than its two legs, and one of them is measurable
+  // over 38 days of candles. That is a genuine ceiling from real data, not a guess.
+  const candidates = [diffusion, stationary];
+  if (tokenBound && tokenBound > 0) candidates.push(tokenBound);
+  const bounded = Math.min(...candidates);
   const sigma = Math.min(CAP, Math.max(FLOOR, bounded));
 
   const basis: SigmaBasis =
     sigma === FLOOR && bounded < FLOOR ? 'floor'
-      : bounded === stationary ? 'stationary' : 'diffusion';
+      : bounded === tokenBound ? 'token'
+        : bounded === stationary ? 'stationary' : 'diffusion';
 
   return {
-    sigma, basis, diffusion, stationary,
-    // Hours of five-minute samples show structure. A distribution needs days.
+    sigma, basis, diffusion, stationary, tokenBound: tokenBound ?? null,
     confident: s.n >= 500 && s.hours >= 48,
   };
 }
