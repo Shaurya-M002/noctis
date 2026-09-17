@@ -80,8 +80,13 @@ function Card({ r }: { r: Receipt }) {
         </div>
       )}
 
-      <div className="mt-2 truncate font-mono text-[9px] text-ink3" title={r.sig}>
-        sig {r.sig}
+      <div className="mt-2 flex items-center gap-1.5">
+        <span className="rounded border border-line2 px-1 py-px text-[8.5px] uppercase tracking-wider text-ink3">
+          simulated
+        </span>
+        <span className="truncate font-mono text-[9px] text-ink3" title={`${r.sig} — a synthetic reference, not a transaction. Real signatures are in docs/DEVNET.md.`}>
+          ref {r.sig}
+        </span>
       </div>
     </div>
   );

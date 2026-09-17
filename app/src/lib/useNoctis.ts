@@ -25,8 +25,17 @@ export interface Receipt {
 
 const INITIAL_TVL = 2_500_000;
 
-/** Fake-but-plausible base58 so the demo reads like a real explorer link. */
-function fakeSig(n: number) {
+/**
+ * A deterministic stand-in for a transaction signature.
+ *
+ * Simulation mode settles against a synthetic auction, so there is no transaction
+ * and there cannot be one. The receipt still shows an identifier because that is
+ * what a receipt has — but it is labelled `simulated` wherever it appears, because
+ * a 44-character base58 string that resolves to nothing on an explorer is the kind
+ * of detail that costs you a reader's trust for no gain. The executable path is
+ * devnet, and those signatures are real: see docs/DEVNET.md.
+ */
+function simulatedRef(n: number) {
   const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   let s = '';
   let x = (n * 2654435761) >>> 0;
@@ -160,7 +169,7 @@ export function useNoctis() {
       sigmaAbs: mark.sigmaAbs,
       capitalAtRisk: q.capitalAtRisk,
       atHours: hoursClosed,
-      sig: fakeSig(nonce.current * 7919),
+      sig: simulatedRef(nonce.current * 7919),
     };
     nonce.current += 1;
     setReceipts((rs) => [r, ...rs]);

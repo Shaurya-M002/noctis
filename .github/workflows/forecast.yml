@@ -1,0 +1,63 @@
+name: forecast
+
+# Records a Noctis mark on a schedule, in the cloud.
+#
+# This existed as a LaunchAgent on a laptop, which was fine until it wasn't: the
+# one weekend before the deadline is Fri 18 Sep 20:00 ET to Sun 20 Sep 20:00 ET,
+# and a closed lid over those 48 hours would permanently destroy the only
+# artefact in this project that cannot be rebuilt with effort — a forecast
+# committed before its outcome existed. A laptop is not a place to keep that.
+#
+# The script decides whether to act; this just pokes it. Recording only happens
+# while US equities are dark, so weekday-daytime runs are cheap no-ops.
+on:
+  schedule:
+    # Every 20 minutes. GitHub delays scheduled runs under load, so the
+    # in-script 2.5h staleness floor — not this cadence — governs sampling.
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # A shallow clone cannot be pushed from; we append to a tracked file.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --omit=optional
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      # Record when the market is dark, score when a bell has rung. Never fails
+      # the job — a dead feed must not turn into a red X on the repo.
+      - name: Record or score
+        run: npx tsx engine/forecast.ts auto || echo "forecast step soft-failed"
+
+      - name: Commit if the log moved
+        run: |
+          if git diff --quiet HEAD -- forecasts/marks.jsonl; then
+            echo "no change"; exit 0
+          fi
+          git config user.name  "noctis-recorder"
+          git config user.email "noctis-recorder@users.noreply.github.com"
+          git add forecasts/marks.jsonl
+          git commit -m "forecast: $(date -u '+%Y-%m-%d %H:%MZ')"
+          # Another run may have landed while we worked; rebase rather than fail.
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin main && git push origin HEAD:main && break
+            echo "push attempt $i failed, retrying"; sleep 5
+          done
