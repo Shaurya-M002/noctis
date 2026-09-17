@@ -10,13 +10,14 @@ Noctis
 
 **One line**
 
-The fair-value layer for the 135 hours a week US equities aren't priced —
+The only tokenised-equity project that publishes an error bar — a fair value for the
+48 hours a week nobody prices,
 published with an error bar you can buy insurance against.
 
 **Links**
 
 - Repo: https://github.com/Shaurya-M002/noctis
-- Demo video: https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4 (3:38, captioned, no audio needed)
+- Demo video: https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4 (2:07, captioned, no audio needed)
 - Live demo: https://shaurya-m002.github.io/noctis/ (real mainnet data, no wallet needed)
 - Program (devnet, live): [NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)
 - On-chain lifecycle, every step a clickable tx: `docs/DEVNET.md`

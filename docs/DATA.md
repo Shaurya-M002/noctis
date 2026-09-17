@@ -1,6 +1,6 @@
 # Live data
 
-Noctis has two modes. The toggle is in the header.
+Noctis has three modes. The toggle is in the header.
 
 | | Simulation | **Live mainnet** |
 |---|---|---|

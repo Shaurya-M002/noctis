@@ -36,7 +36,12 @@ Written before anyone asks.
   Monday has not happened. Every RMSE, coverage and loss-ratio number in this repo
   comes from the synthetic backtest. Live data proves the inputs are real; the
   backtest proves the model is calibrated. Neither borrows the other's evidence.
-- **Devnet deployment did not happen** — the faucet was rate-limited from this
+- ~~Devnet deployment did not happen~~ — **it did.** Program
+  `NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE` is live with a settled lifecycle;
+  see [DEVNET.md](DEVNET.md). This line is kept struck through rather than deleted
+  because the rest of the file is a record of what was true when written, and
+  quietly editing away a limitation once it is fixed is how a limitations doc stops
+  being trustworthy. Originally blocked because — the faucet was rate-limited from this
   machine and 386 KB of program needs ~2.7 SOL of rent. The build artefact and
   the deploy command are both in the repo; `scripts/localnet-test.sh` proves the
   same binary deploys and runs.

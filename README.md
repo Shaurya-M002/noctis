@@ -1,12 +1,14 @@
 <h1>Noctis</h1>
 
-**The fair-value layer for the 135 hours a week US equities aren't priced — published with an error bar you can buy insurance against.**
+**The only tokenised-equity project that publishes an error bar — and puts money behind it.**
+
+A fair value for the **48 hours a week** when neither the exchange nor Pyth says anything, with a measured uncertainty attached, and parametric cover priced off that uncertainty.
 
 Stocklana hackathon submission · Solana Foundation · September 2026
 
 **▶ [Open the live demo](https://shaurya-m002.github.io/noctis/)** — real mainnet data, no wallet needed ·
 **[Program on devnet](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)** — deployed, with the full lifecycle settled on-chain ·
-**[Watch the 3-minute walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** — captioned, no audio
+**[Watch the 2:07 walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** — captioned, no audio
 
 ![Noctis](media/02-hero.png)
 
@@ -52,7 +54,7 @@ answers to the same question — *what is this worth when nothing is quoting it?
 
 ## Live, on mainnet, right now
 
-The demo has two modes and the toggle is in the header. **Live** points the same
+The demo has three modes and the toggle is in the header. **Live** points the same
 model at real data — Jupiter for on-chain and reference prices, DexScreener for
 volume and per-venue prints, Coinbase for crypto returns measured from the actual
 last ET close. Public endpoints, no API key, no server, fetched straight from the
