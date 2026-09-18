@@ -14,7 +14,7 @@ import { FACTORS, UNIVERSE } from '../data/universe';
 import type { FactorNoise, FactorReturns, TapeSignal } from './nyx';
 import { informationHoursAhead } from './market';
 
-/** mulberry32 — small, fast, seeded. */
+/** mulberry32, small, fast, seeded. */
 export function rng(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -54,7 +54,7 @@ export interface Scenario {
   windowHours: number;
   /** UTC instant of the regular-session close that opens the window. */
   startUTC: string;
-  /** Extra drift applied to MKT across the window — the "news" of the weekend. */
+  /** Extra drift applied to MKT across the window, the "news" of the weekend. */
   marketShock: number;
   /** Multiplier on all factor vols. */
   volMult: number;
@@ -66,7 +66,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: 'quiet',
     name: 'Quiet weekend',
-    blurb: 'Nothing happens. Friday 16:00 ET to Monday 09:30 ET — 65.5 hours of silence.',
+    blurb: 'Nothing happens. Friday 16:00 ET to Monday 09:30 ET, 65.5 hours of silence.',
     seed: 20260912, windowHours: 65.5, startUTC: '2026-09-11T20:00:00Z', marketShock: 0.0015, volMult: 0.45,
     openJumps: {},
   },
@@ -143,7 +143,7 @@ function buildPaths(sc: Scenario) {
     idioPath[a.sym] = p;
 
     // Thin-book dislocation. While the cash equity is shut nobody can arbitrage the
-    // token against it, so the last trade does not snap back to fair — it wanders,
+    // token against it, so the last trade does not snap back to fair, it wanders,
     // slowly, and can sit two or three percent away for hours. Highly persistent
     // (AR 0.95) rather than noisy, which is what makes it dangerous: it looks like
     // a stable price right up until the auction disagrees with it.

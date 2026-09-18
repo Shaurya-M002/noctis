@@ -56,7 +56,7 @@ export interface LiveAsset {
   /** Last official reference price of the underlying equity, USD. */
   reference: number;
   referenceAt: number | null;
-  /** ln(onChain / reference) — the raw dislocation, basis and signal mixed. */
+  /** ln(onChain / reference), the raw dislocation, basis and signal mixed. */
   dislocation: number;
   liquidity: number;
   volume24h: number;
@@ -197,7 +197,7 @@ export async function fetchVenues(mint: string): Promise<Venue[]> {
   const d = await getJSON(`${DEX}/latest/dex/tokens/${mint}`);
   const pairs: Venue[] = (d?.pairs ?? [])
     // Only pools where this mint is the BASE token. In a TREE/AAPLx pool the
-    // priceUsd field is TREE's price, not ours — including those was reporting
+    // priceUsd field is TREE's price, not ours, including those was reporting
     // $0.00 prints and a 10,000 bps dispersion.
     .filter((p: Record<string, any>) => p?.baseToken?.address === mint)
     .map((p: Record<string, any>) => ({
@@ -229,7 +229,7 @@ export interface Executable {
  * position sitting 10% away looks like a screaming arbitrage right up until you
  * notice the router walks straight past it, because there is no size behind it.
  *
- * The honest measure of "is this a price" is the round trip — buy N dollars of it,
+ * The honest measure of "is this a price" is the round trip, buy N dollars of it,
  * sell it straight back, see what is missing.
  */
 export async function fetchExecutable(mint: string, decimals = 8): Promise<Executable[]> {
@@ -259,7 +259,7 @@ export async function fetchExecutable(mint: string, decimals = 8): Promise<Execu
 }
 
 /** Spread between the best and worst QUOTED pool price, in bps of the median.
- *  Not a tradeable spread — see `fetchExecutable`. */
+ *  Not a tradeable spread, see `fetchExecutable`. */
 export function dispersionBps(vs: Venue[]): number {
   if (vs.length < 2) return 0;
   const px = vs.map((v) => v.price);
@@ -302,7 +302,7 @@ export async function fetchSnapshot(lastCloseMs: number): Promise<LiveSnapshot> 
   /**
    * Reading noise. MKT and SECT are DERIVED from thin on-chain prints rather than
    * observed on a real venue, so they are far noisier than the synthetic
-   * scenario's factors — and an unavailable factor gets the full standalone
+   * scenario's factors, and an unavailable factor gets the full standalone
    * uncertainty of the move it would have explained.
    */
   const noise: FactorNoise = {
@@ -338,7 +338,7 @@ export async function fetchSnapshot(lastCloseMs: number): Promise<LiveSnapshot> 
  *
  * MKT and SECT are read off the cross-section of xStock dislocations. If we let a
  * name contribute to the factor that then explains it, the model reads its own
- * input back as independent evidence and understates sigma — SPYx was the worst
+ * input back as independent evidence and understates sigma, SPYx was the worst
  * offender, since it IS the market proxy. Excluding the asset being marked costs
  * nothing and removes the circularity for every name at once.
  *

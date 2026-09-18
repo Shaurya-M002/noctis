@@ -70,7 +70,7 @@ export function Sources({
             );
           })}
           <p className="mt-2 border-t border-line pt-2 text-[10px] leading-snug text-ink3">
-            A factor with no live source is not read as zero — its full standalone
+            A factor with no live source is not read as zero, its full standalone
             uncertainty is added to σ instead. Missing data should make the model
             less confident, not accidentally more.
           </p>
@@ -88,7 +88,7 @@ export function Sources({
           <p className="mt-1.5 text-[10px] leading-snug text-ink3">
             The median dislocation across every name. When the whole complex moves
             together it is the price of warehousing gap risk over the weekend, not
-            a forecast — so Nyx strips it out and only reads the cross-section.
+            a forecast, so Nyx strips it out and only reads the cross-section.
           </p>
         </div>
       )}

@@ -8,7 +8,7 @@ import { compact } from '../lib/fmt';
  *
  * With the cash equity shut there is no arbitrage to close these, so the prints
  * spread out. This is the single most persuasive live panel in the app because
- * it is not a model output — it is just what the chain says.
+ * it is not a model output, it is just what the chain says.
  */
 export function VenueChart({
   venues, mark, reference, loading, basis, executable,
@@ -77,7 +77,7 @@ export function VenueChart({
       {executable.length > 0 && (
         <div className="mb-3 rounded-lg border border-tape/30 bg-tape/[0.05] p-3">
           <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-tape/90">
-            What you can actually trade at — Jupiter router, right now
+            What you can actually trade at, Jupiter router, right now
           </div>
           <div className="space-y-1">
             {executable.map((e) => (
@@ -97,7 +97,7 @@ export function VenueChart({
             The table below is what each pool <em>quotes</em>. This is what the
             router will actually fill. They are not the same number, and the gap
             between them is where most tokenised-equity &ldquo;arbitrage&rdquo;
-            headlines die — the router walks straight past a stale pool sitting 10%
+            headlines die, the router walks straight past a stale pool sitting 10%
             away, because there is no size behind it.
             {executable[0] && (
               <> Note the scale: assurance on this name costs tens of basis points,
@@ -114,7 +114,7 @@ export function VenueChart({
         The mark sits <span className="text-mark">above the whole cluster</span>, and
         that is deliberate. Every print here carries the{' '}
         <span className="num text-ink2">{(basis * 100).toFixed(2)}%</span> weekend
-        basis — the discount holders accept for wanting out before anyone can hedge
+        basis. The discount holders accept for wanting out before anyone can hedge
         against the cash equity. That discount is the price of liquidity on a
         Sunday, and it disappears at the opening bell. Noctis is estimating{' '}
         <em>Monday&apos;s print</em>, so it prices the basis out rather than

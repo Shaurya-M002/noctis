@@ -28,7 +28,7 @@ export interface LiveState {
   venues: Venue[];
   venuesLoading: boolean;
   dispersion: number;
-  /** Round-trip cost from Jupiter's router — what a trade actually costs. */
+  /** Round-trip cost from Jupiter's router, what a trade actually costs. */
   executable: Executable[];
   quote: (tier: Tier, notional: number) => PremiumQuote;
   refresh: () => void;
@@ -45,7 +45,7 @@ export interface LiveState {
 /**
  * Live mode.
  *
- * The same Nyx and the same premium math as the simulation — only the inputs
+ * The same Nyx and the same premium math as the simulation, only the inputs
  * change. Nothing about the model is special-cased for the demo, which is the
  * whole reason this mode is worth having.
  */
@@ -73,7 +73,7 @@ export function useLive(enabled: boolean, sym: string): LiveState {
   }, [enabled]);
 
   // The calendar comes from Pyth when we have it, and falls back to the builtin
-  // set otherwise. Live mode only — simulation and the backtest never see this.
+  // set otherwise. Live mode only, simulation and the backtest never see this.
   const session = useMemo(() => sessionAt(now, calendar), [now, calendar]);
   const lastCloseMs = useMemo(
     () => now.getTime() - session.hoursClosed * 3_600_000,

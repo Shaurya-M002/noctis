@@ -30,7 +30,7 @@ const INITIAL_TVL = 2_500_000;
  *
  * Simulation mode settles against a synthetic auction, so there is no transaction
  * and there cannot be one. The receipt still shows an identifier because that is
- * what a receipt has — but it is labelled `simulated` wherever it appears, because
+ * what a receipt has. But it is labelled `simulated` wherever it appears, because
  * a 44-character base58 string that resolves to nothing on an explorer is the kind
  * of detail that costs you a reader's trust for no gain. The executable path is
  * devnet, and those signatures are real: see docs/DEVNET.md.
@@ -59,7 +59,7 @@ export function useNoctis() {
   const [payoutsPaid, setPayouts] = useState(0);
   const [settledAt, setSettledAt] = useState<number | null>(null);
   /** Where the clock was when the auction was called. Scoring the mark AT the open
-   *  would be meaningless — by then the mark and the print have converged. The
+   *  would be meaningless, by then the mark and the print have converged. The
    *  honest question is how good the answer was when you had to act on it. */
   const [scoredAt, setScoredAt] = useState<number | null>(null);
 

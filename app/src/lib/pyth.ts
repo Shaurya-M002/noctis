@@ -5,7 +5,7 @@
  * key, and equities sit in the Pro tier at $2,500/mo. The same numbers are on
  * mainnet for free, readable by anyone with an RPC URL. So we read the chain.
  *
- * Everything in this file is measured rather than assumed — see docs/PYTH.md.
+ * Everything in this file is measured rather than assumed, see docs/PYTH.md.
  * The three findings that shaped it:
  *
  *   1. `api.mainnet-beta.solana.com` rejects browser requests. The ladder below
@@ -22,7 +22,7 @@ import type { SourceReport } from './feeds';
 
 /**
  * Shard-1 PriceUpdateV2 accounts. Shard 0 exists for each of these and is
- * ABANDONED — AAPL's is 33 days stale, TSLA's only 4.5 days and 2.2% wrong, which
+ * ABANDONED. AAPL's is 33 days stale, TSLA's only 4.5 days and 2.2% wrong, which
  * is the one that would actually fool you. Re-derive with `npm run pyth:verify`.
  */
 export const PYTH_FEEDS = [
@@ -81,12 +81,12 @@ const hex = (b: Uint8Array) =>
   Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 
 /**
- * Decode a PriceUpdateV2 account. Returns null rather than throwing — a malformed
+ * Decode a PriceUpdateV2 account. Returns null rather than throwing, a malformed
  * account is data, not an exception.
  *
  * The offset is NOT a constant, which is the subtle part. `verification_level` is a
  * variable-length Borsh enum at byte 40: `Full` is one byte, `Partial{u8}` is two.
- * Every feed is Full today, so hardcoding 73 works — right up until one isn't, and
+ * Every feed is Full today, so hardcoding 73 works, right up until one isn't, and
  * then every field shifts by one and you render garbage with total confidence.
  */
 export function decodePriceUpdateV2(buf: Uint8Array) {
@@ -201,7 +201,7 @@ export async function readPyth(): Promise<PythRead> {
  * Two questions that are easy to conflate and must not be.
  *
  * `is the exchange in session` comes from the calendar. `is the feed alive` comes
- * from publish_time. At 09:27 ET on a Wednesday the answer is NO and YES — the
+ * from publish_time. At 09:27 ET on a Wednesday the answer is NO and YES, the
  * exchange opens at 09:30, and Pyth has been ticking all night. Rendering
  * "MARKET CLOSED" next to a 19-second-old price reads as a bug, and for a project
  * about the hours the market is shut, getting this wrong would be embarrassing.

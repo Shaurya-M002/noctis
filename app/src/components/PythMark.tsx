@@ -13,7 +13,7 @@ import { pctSigned } from '../lib/fmt';
  *   the exchange session   from Pyth's own schedule string
  *   the feed's liveness    from publish_time
  *
- * On a Wednesday at 09:27 those read CLOSED and LIVE — Pyth ticks all night, and
+ * On a Wednesday at 09:27 those read CLOSED and LIVE, Pyth ticks all night, and
  * saying otherwise would be wrong. On a Saturday they read CLOSED and DARK, and the
  * dark timer climbs toward 48 hours. That second state is the whole thesis, told in
  * the incumbent's numbers rather than ours.
@@ -52,7 +52,7 @@ export function PythMark({
           </ul>
         )}
         <p className="mt-2 text-[10px] leading-snug text-ink3">
-          The rest of the page is unaffected — Pyth is read on its own independent
+          The rest of the page is unaffected, Pyth is read on its own independent
           cycle precisely so that this cannot take anything else down with it.
         </p>
       </div>
@@ -84,7 +84,7 @@ export function PythMark({
           <span className="num text-[14px] text-tape">± {p.conf.toFixed(4)}</span>
         </div>
         <div className="mt-1 num text-[11px] text-ink3">
-          confidence {p.confBps.toFixed(2)} bps — how much Pyth&apos;s publishers
+          confidence {p.confBps.toFixed(2)} bps, how much Pyth&apos;s publishers
           disagree <em>right now</em>
         </div>
 
@@ -108,7 +108,7 @@ export function PythMark({
         {state === 'dark' && (
           <div className="pulse mt-3 rounded-lg border border-warn/50 bg-warn/[0.09] px-3 py-2.5">
             <div className="num text-[13px] text-warn">
-              PYTH IS DARK — {fmtDuration(age / 3600)} since the last publish
+              PYTH IS DARK, {fmtDuration(age / 3600)} since the last publish
             </div>
             <p className="mt-1 text-[10.5px] leading-snug text-ink2">
               Pyth&apos;s own schedule marks today
@@ -130,7 +130,7 @@ export function PythMark({
         <Card label={`Gap, ${sym} vs the last Pyth publish`}
               value={gap === null ? '—' : pctSigned(gap)}
               note={state === 'dark'
-                ? 'nobody can arbitrage this — the reference itself is offline'
+                ? 'nobody can arbitrage this, the reference itself is offline'
                 : 'the token and the feed are both live, so this stays tight'} />
         <Card label="Noctis mark" value={noctisMark.toFixed(2)} accent="mark"
               note="a forecast for the reopening auction, not a quote" />

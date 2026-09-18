@@ -97,7 +97,7 @@ await card('168 hours in a week.',
 // ───────────────────────────────────────────── scene 1b: live mainnet
 await page.getByRole('button', { name: 'Live mainnet' }).click();
 await wait(8000);
-await say('This is mainnet. Right now. No API key, no server — the browser is<br>reading Jupiter, DexScreener and Coinbase directly.', 4600);
+await say('This is mainnet. Right now. No API key, no server. The browser is<br>reading Jupiter, DexScreener and Coinbase directly.', 4600);
 await hush();
 
 await to('text=WHERE THE SAME TOKEN IS PRINTING', 250);
@@ -109,10 +109,10 @@ await say('<b>Over a thousand basis points apart</b>, and nothing closes it —<
 await hush();
 
 await to('text=PYTH, READ STRAIGHT OFF SOLANA MAINNET', 240);
-await say('And this is Pyth — decoded out of a Solana account, in your browser.'
+await say('And this is Pyth, decoded out of a Solana account, in your browser.'
   + '<i>Hermes needs an API key now and equities are the $2,500-a-month tier. The same numbers are on mainnet for free.</i>', 6000);
 await say('Two questions people conflate, shown separately.'
-  + '<i>The exchange session comes from Pyth’s own schedule string. Whether the feed is alive comes from publish_time. On a weeknight those disagree — and they should.</i>', 6600);
+  + '<i>The exchange session comes from Pyth’s own schedule string. Whether the feed is alive comes from publish_time. On a weeknight those disagree, and they should.</i>', 6600);
 await say('We measured the feed instead of trusting the marketing.'
   + '<i>24,000 on-chain writes, one gap in five days: 48 hours exactly, Friday 20:00 to Sunday 20:00 ET. So the hole is 48 hours, not the 65.5 we had been claiming. We corrected it.</i>', 7200);
 await hush();
@@ -131,11 +131,11 @@ await wait(1200);
 
 // ───────────────────────────────────────────── scene 2: the four answers
 await page.mouse.move(800, 500);
-await say('So — what is <b>AAPLx</b> worth at 10am on a Saturday?', 3600);
+await say('So. What is <b>AAPLx</b> worth at 10am on a Saturday?', 3600);
 await say('Pyth says <b>MARKET_CLOSED</b>. The last close is Friday\'s number.<br>The 24/7 book is one $40k order and 26 bps wide.'
   + '<i>Three answers. None of them a price.</i>', 5200);
 await say('Noctis answers <b>230.84 ± 2.39</b>.'
-  + '<i>Not a last trade — a conditional expectation of Monday\'s opening print, published with the one number every other oracle omits.</i>', 5600);
+  + '<i>Not a last trade. A conditional expectation of Monday\'s opening print, published with the one number every other oracle omits.</i>', 5600);
 await hush();
 
 // ─────────────────────────────────────────────────────────────── scene 2
@@ -145,7 +145,7 @@ for (const v of [4, 20, 38, 55, 64, 30]) {
   await page.locator('input[type=range]').fill(String(v));
   await wait(620);
 }
-await say('Widest in the middle of the weekend — far from the last real price,<br>and still far from the next one.'
+await say('Widest in the middle of the weekend. Far from the last real price,<br>and still far from the next one.'
   + '<i>Most models only count the time elapsed. The bell is what you are actually predicting.</i>', 5200);
 await hush();
 
@@ -163,7 +163,7 @@ await to('text=REOPEN ASSURANCE');
 await say('Noctis is <b>not a venue</b>. It never touches your trade —<br>execute wherever you like. There is no order flow here to tax.', 4400);
 await say('The only thing you can buy is <b>certainty about the reopening print</b>.'
   + '<i>Raw: free, you eat the gap. Band: you absorb the first 1σ. Pin: you are filled at the official open.</i>', 5600);
-await say('Priced as what it is — a one-sided option on the overnight gap.<br>N × σ × E[(Z−k)⁺], plus capital scarcity, plus concentration.', 5000);
+await say('Priced as what it is. A one-sided option on the overnight gap.<br>N × σ × E[(Z−k)⁺], plus capital scarcity, plus concentration.', 5000);
 await hush();
 
 // ─────────────────────────────────────────────────────────────── scene 4
@@ -186,7 +186,7 @@ await page.evaluate(() => window.scrollTo({ top: 0 }));
 await wait(500);
 await page.getByRole('button', { name: /run the opening auction/ }).click();
 await wait(1400);
-await say('Monday, 09:30. The auction prints — <b>2.7% below the mark</b>. Three sigma.', 4400);
+await say('Monday, 09:30. The auction prints, <b>2.7% below the mark</b>. Three sigma.', 4400);
 await say('Now there is a real price again, and a scorecard —<br>graded on where each answer stood when you actually had to act.'
   + '<i>On this particular night the thin book landed closer, and the panel says so. Over 800 nights it does not. Neither it nor the close published a band, which is why neither could have underwritten the trade.</i>', 7000);
 await hush();
@@ -200,7 +200,7 @@ await hush();
 // ─────────────────────────────────────────────────────────────── scene 5
 await to('text=UNDERWRITING VAULT');
 await say('Somebody was short that gap. The vault paid, and the demo says so.'
-  + '<i>100% of premiums go to LPs. Noctis takes 10% of the vault\'s net profit — nothing on your volume.</i>', 5800);
+  + '<i>100% of premiums go to LPs. Noctis takes 10% of the vault\'s net profit, nothing on your volume.</i>', 5800);
 await say('Mis-estimate σ and the vault loses money and we earn <b>zero</b>.<br>The incentive to be calibrated is the business model.', 4800);
 await hush();
 
@@ -213,7 +213,7 @@ await to('text=DOES ANY OF THIS ACTUALLY WORK');
 await say('200 independent weekends. The model never sees the latent path it is scored against.', 3800);
 await say('<b>58% better</b> than the last close. Better than the 24/7 book too.', 3400);
 await say('And look at the shape, not just the width.'
-  + '<i>75% inside 1σ, 95% inside 2σ. A normal predicts 68% and 95%. A Student-t with four degrees of freedom predicts 77% and 95%. That is what the gap distribution is — so that is what we price off.</i>', 7000);
+  + '<i>75% inside 1σ, 95% inside 2σ. A normal predicts 68% and 95%. A Student-t with four degrees of freedom predicts 77% and 95%. That is what the gap distribution is, so that is what we price off.</i>', 7000);
 await say('Which made the product <b>cheaper</b>, not dearer.'
   + '<i>At a one-sigma deductible the taller peak beats the fatter tail. Pin fell 11%. We could have kept the Gaussian and called the difference prudence.</i>', 6400);
 await hush();
@@ -232,7 +232,7 @@ await hush();
 await to('text=EVERY NAME, AND EVERY DISAGREEMENT', 250);
 await say('Across xStocks the weekend gap spans about one and a half points.<br>Here it spans <b>thirty</b>.', 4400);
 await say('And a second issuer tokenises three of the same companies.'
-  + '<i>They disagree by 21% on OpenAI. 56% on Kalshi. 59% on SpaceX. Nobody knows what these are worth to within a factor of two — and that is not noise to smooth away, it is the honest width of the answer.</i>', 7400);
+  + '<i>They disagree by 21% on OpenAI. 56% on Kalshi. 59% on SpaceX. Nobody knows what these are worth to within a factor of two. And that is not noise to smooth away, it is the honest width of the answer.</i>', 7400);
 await hush();
 
 await card('One more thing.',
@@ -242,7 +242,7 @@ await card('The exploit',
   '<span style="font-size:20px;line-height:1.7;display:block;text-align:left;max-width:820px">'
   + 'The opening print stayed on the account forever.<br><br>'
   + 'So the <i>next</i> weekend, buy Pin cover in whichever direction<br>'
-  + 'last Monday\'s print favoured — then call the permissionless<br>'
+  + 'last Monday\'s print favoured, then call the permissionless<br>'
   + 'settle immediately. No waiting. No risk. Repeat until the vault<br>'
   + 'is empty.</span>', 8000);
 

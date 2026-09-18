@@ -2,8 +2,8 @@
  * The market calendar, read from Pyth.
  *
  * Until now this repo hardcoded a set of 2026 holidays and the literals 09:30 and
- * 16:00. Pyth publishes the real thing — sessions, weekends and dated holiday
- * overrides including half days — as a schedule string on every equity feed, from
+ * 16:00. Pyth publishes the real thing, sessions, weekends and dated holiday
+ * overrides including half days, as a schedule string on every equity feed, from
  * a metadata endpoint that is still keyless after the Core upgrade.
  *
  * Two rules govern everything here, and both exist to protect the backtest:
@@ -61,7 +61,7 @@ const WD: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat
 /**
  * The rule in force on a given day.
  *
- * Two object lookups and nothing else — no Date, no Intl, no allocation.
+ * Two object lookups and nothing else, no Date, no Intl, no allocation.
  * `informationHoursAhead` calls this ~131 times per mark, and the 800-night
  * backtest calls that ~13,000 times. Doing anything heavier here is how the
  * backtest went from seconds to minutes once before.
@@ -129,7 +129,7 @@ export function parseSchedule(raw: string): Pick<MarketCalendar, 'tz' | 'weekly'
 }
 
 /**
- * Union, not replacement — and this matters.
+ * Union, not replacement, and this matters.
  *
  * Pyth's override list is a rolling ~12 months with no year on the dates. Today it
  * carries none of 2026's first-half holidays, and it carries `0326`, which is Good
@@ -175,7 +175,7 @@ function readCache(): MarketCalendar | null {
 function writeCache(raw: string, symbol: string) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ raw, symbol, fetchedAt: Date.now() }));
-  } catch { /* quota, private mode — not worth a branch */ }
+  } catch { /* quota, private mode, not worth a branch */ }
 }
 export const cachedCalendar = readCache;
 
@@ -199,12 +199,12 @@ export async function fetchPythCalendar(under = 'AAPL', timeoutMs = 2500): Promi
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const r = await fetch(url, { signal: ctl.signal });
-    if (!r.ok) return fail(`HTTP ${r.status} — builtin calendar in force`);
+    if (!r.ok) return fail(`HTTP ${r.status}, builtin calendar in force`);
     const feeds = await r.json();
     // `query=SPY` returns SPY, SPYG, SPYV and SPYM. Match the symbol exactly.
     const want = `Equity.US.${under}/USD`;
     const feed = (feeds as any[]).find((f) => f?.attributes?.symbol === want);
-    if (!feed?.attributes?.schedule) return fail(`no ${want} in response — builtin in force`);
+    if (!feed?.attributes?.schedule) return fail(`no ${want} in response, builtin in force`);
 
     const raw: string = feed.attributes.schedule;
     const calendar = mergeWithBuiltin(parseSchedule(raw), raw, want);

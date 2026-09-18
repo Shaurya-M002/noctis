@@ -1,6 +1,6 @@
 # Pre-IPO: the weekend that never ends
 
-An xStock is unpriced for 48 hours a week. A pre-IPO token has no exchange at all —
+An xStock is unpriced for 48 hours a week. A pre-IPO token has no exchange at all.
 no bell, no auction, no reopening print, ever. The only reference is a mark its
 issuer publishes from off-chain secondary-market data, and the token trades against
 it around the clock.
@@ -34,7 +34,7 @@ is for.
 ## Two different pathologies, same symptom
 
 Recording every five minutes surfaced something a single snapshot cannot. For most
-names the issuer mark is nearly static while the token moves **~100× faster** — so
+names the issuer mark is nearly static while the token moves **~100× faster**, so
 the gap is almost entirely the token's own movement against a slow reference.
 
 SpaceX is the opposite. Its mark moved 3% in ninety minutes while the token printed
@@ -46,7 +46,7 @@ case each name is in, from the measured velocities.
 
 ## Where the history comes from
 
-Neither PreStocks nor Tessera exposes a price-history endpoint — I checked every
+Neither PreStocks nor Tessera exposes a price-history endpoint, I checked every
 plausible path on both. So a calibration series could only exist if we had been
 recording, and `scripts/prestocks-cron.sh` has been sampling every five minutes
 since we decided to look. It commits to `forecasts/prestocks.jsonl` and pushes.
@@ -63,7 +63,7 @@ GeckoTerminal serves free, keyless, CORS-open hourly OHLCV going back over a mon
 for every one of these pools. So the **token** half of the gap is fully observable
 in history. The **mark** half is not.
 
-The tempting move is to proxy the mark with a slow EMA of the token — a
+The tempting move is to proxy the mark with a slow EMA of the token, a
 secondary-market mark is a smoothed traded price, after all. We built it, then
 checked the proxy against the live marks:
 
@@ -73,7 +73,7 @@ checked the proxy against the live marks:
 | Anthropic | **−4.44%** | −23.28% |
 
 Badly wrong, and wrong in a revealing way. The issuer's mark tracks the token far
-more closely than a weekly EMA — nearer a 6-to-24-hour one. So the mark is not a
+more closely than a weekly EMA, nearer a 6-to-24-hour one. So the mark is not a
 slow independent estimate at all; it co-moves with the same secondary market the
 token follows. Calibrating off that proxy produced a 37–70% σ for a seven-day
 cover, and essentially all of it was the proxy's error rather than the gap's
@@ -83,7 +83,7 @@ We deleted it. A reconstructed gap history would have been invented data, and th
 project has been careful not to ship any.
 
 **What the candles do honestly establish** is how volatile the token is, with real
-volume behind it — the largest hourly move in the OpenAI window is 29%, on $107k of
+volume behind it. The largest hourly move in the OpenAI window is 29%, on $107k of
 volume, and the biggest volume hour is $1.25M. Candles under $1k of volume are
 dropped, because a candle with no trade behind it is a quote, not a price. That
 gives a hard ceiling: **the gap cannot move faster than its two legs**, and one leg
@@ -100,7 +100,7 @@ token vol, 38d of candles          43.39%
 
 ### Scoring it
 
-The pre-IPO log cannot score a seven-day move — nothing has been held that long.
+The pre-IPO log cannot score a seven-day move, nothing has been held that long.
 But it can score the horizon it *is* old enough for, and the panel does:
 
 ```
@@ -121,7 +121,7 @@ produced a premium of over 200 bps and was plainly nonsense.
 
 Two things are wrong with it. Five-minute samples of a thin AMM are dominated by
 bid-ask bounce rather than information, so √t compounds a microstructure artefact
-into a number with no meaning. And the gap is not a random walk — it oscillates
+into a number with no meaning. And the gap is not a random walk, it oscillates
 inside a band, because the token is tethered to a mark that barely moves. A
 mean-reverting series converges on its stationary width instead of spreading.
 
@@ -137,7 +137,7 @@ the number and says, in as many words, that it is not calibrated.
 
 ## The product
 
-**NAV-gap cover.** Not "reopen assurance" — there is no reopening. You insure the
+**NAV-gap cover.** Not "reopen assurance", there is no reopening. You insure the
 gap between the token and the issuer's mark over a horizon, and it settles against
 the mark the issuer publishes at T+N.
 
@@ -161,8 +161,8 @@ formula, priced off a different σ.
 
 ## Not pursued: Tessera's bounty
 
-Tessera's own bounty asks for bonding-curve products. T-Tokens do not use one —
-they trade on Meteora DLMM pools — and more decisively they have **no settlement
+Tessera's own bounty asks for bonding-curve products. T-Tokens do not use one.
+they trade on Meteora DLMM pools, and more decisively they have **no settlement
 event**: redemption requires an IPO or a change of control, possibly years out. The
 nearest recurring alternative is a roughly monthly NAV attestation, which yields
 zero settlements inside any reasonable horizon, and one-month σ on a private

@@ -1,5 +1,5 @@
 /**
- * CLI backtest — the same code the UI runs, so a judge can check the numbers
+ * CLI backtest. The same code the UI runs, so a judge can check the numbers
  * without trusting a screenshot.
  *
  *   npx tsx engine/backtest.ts [nights] [tier]
@@ -15,7 +15,7 @@ const pct = (x: number, d = 2) => `${(x * 100).toFixed(d)}%`;
 const usd = (x: number) => `$${x.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const pad = (s: string, n: number) => s.padEnd(n);
 
-console.log(`\n  NOCTIS BACKTEST — ${bt.nights} nights × 8 names = ${bt.results.length} observations`);
+console.log(`\n  NOCTIS BACKTEST. ${bt.nights} nights × 8 names = ${bt.results.length} observations`);
 console.log(`  assurance tier: ${tier}\n`);
 
 console.log('  Predicting the official opening print (RMSE, lower is better)');

@@ -52,7 +52,7 @@ export function usePreIPO(enabled: boolean): PreIPOState {
     return () => clearInterval(t);
   }, [enabled, load]);
 
-  // Candle history for the selected name only — GeckoTerminal's free tier is
+  // Candle history for the selected name only, GeckoTerminal's free tier is
   // rate-limited, and one name at a time is plenty for a panel.
   useEffect(() => {
     if (!enabled) return;

@@ -3,7 +3,7 @@
  *
  * These are the same shape of problem as an xStock at the weekend, except the
  * weekend never ends. There is no exchange, no closing bell and no reopening
- * auction — the only reference is a mark the issuer publishes from off-chain
+ * auction. The only reference is a mark the issuer publishes from off-chain
  * secondary-market data, and the token trades against it around the clock.
  *
  * Mints verified on mainnet; all eight are Token-2022 with 9 decimals.

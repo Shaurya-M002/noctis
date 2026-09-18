@@ -72,7 +72,7 @@ export function Waterfall({ mark }: { mark: Mark }) {
         </h3>
         <p className="mt-1 mb-3 text-[11px] text-ink3">
           σ = {pct(mark.sigma)}. This is what the premium is priced off. Pyth
-          publishes a confidence interval too — but it measures publisher
+          publishes a confidence interval too, but it measures publisher
           disagreement right now, and its equity feeds are closed during this
           window. This is forecast error for Monday&apos;s auction.
         </p>
@@ -98,7 +98,7 @@ export function Waterfall({ mark }: { mark: Mark }) {
         </div>
         <div className="mt-3 border-t border-line pt-2 text-[10.5px] text-ink3">
           Information time elapsed: <span className="num text-ink2">{mark.infoHours.toFixed(1)}h</span> of
-          trading-equivalent. Calendar hours are discounted — a Sunday 04:00 hour
+          trading-equivalent. Calendar hours are discounted, a Sunday 04:00 hour
           carries far less news than a Tuesday 10:00 one.
         </div>
       </div>

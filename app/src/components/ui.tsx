@@ -47,7 +47,7 @@ export function Stat({
   );
 }
 
-/** A legend swatch. Identity is never colour alone — the label is always here. */
+/** A legend swatch. Identity is never colour alone, the label is always here. */
 export function Key({ color, label, dash }: { color: string; label: string; dash?: boolean }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-[11px] text-ink2">

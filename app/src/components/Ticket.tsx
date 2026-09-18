@@ -151,7 +151,7 @@ export function Ticket({
           </div>
           <div className="mt-1.5 text-[10px] leading-snug text-ink3">
             100% of this goes to the underwriting vault. Noctis takes 10% of the
-            vault&apos;s <em>net profit</em> — nothing on your volume. We are paid for
+            vault&apos;s <em>net profit</em>, nothing on your volume. We are paid for
             being calibrated, not for being used.
           </div>
         </div>
@@ -159,7 +159,7 @@ export function Ticket({
 
       {quoteOnly ? (
         <p className="rounded-lg border border-line bg-void/60 px-3 py-2.5 text-[10.5px] leading-snug text-ink3">
-          Quote only. Live mode is not wallet-connected — these are what the
+          Quote only. Live mode is not wallet-connected, these are what the
           program would charge at the mark and σ above, computed by the same
           fixed-point formula the chain runs. The executable path is exercised by
           the on-chain test suite instead: <span className="num">scripts/localnet-test.sh</span>.
@@ -175,10 +175,10 @@ export function Ticket({
         }`}
       >
         {disabled
-          ? 'Market reopened — auction settled'
+          ? 'Market reopened, auction settled'
           : q.premium > 0
-            ? `Cover ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'} — ${usd(q.premium)}`
-            : `Take the gap naked — ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'}`}
+            ? `Cover ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'}, ${usd(q.premium)}`
+            : `Take the gap naked, ${qty} ${asset.sym} ${side === 'BUY' ? 'long' : 'short'}`}
       </button>
       )}
     </div>

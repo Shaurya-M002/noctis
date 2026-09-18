@@ -59,14 +59,14 @@ function Card({ r }: { r: Receipt }) {
           </div>
           {s.breached && (
             <p className="mt-1.5 text-[10px] leading-snug text-truth">
-              Gap breached the band. The vault paid {usd(s.payout)} —
+              Gap breached the band. The vault paid {usd(s.payout)}.
               {' '}{usd(s.payout - r.premium)} more than the premium you handed it.
             </p>
           )}
           {!s.breached && r.tier !== 'RAW' && s.adverse === 0 && (
             <p className="mt-1.5 text-[10px] leading-snug text-ink3">
               The gap went your way, so nothing was owed. Assurance is insurance,
-              not a swap — the upside was always yours. The vault keeps the{' '}
+              not a swap, the upside was always yours. The vault keeps the{' '}
               {usd(r.premium)}.
             </p>
           )}
@@ -84,7 +84,7 @@ function Card({ r }: { r: Receipt }) {
         <span className="rounded border border-line2 px-1 py-px text-[8.5px] uppercase tracking-wider text-ink3">
           simulated
         </span>
-        <span className="truncate font-mono text-[9px] text-ink3" title={`${r.sig} — a synthetic reference, not a transaction. Real signatures are in docs/DEVNET.md.`}>
+        <span className="truncate font-mono text-[9px] text-ink3" title={`${r.sig}, a synthetic reference, not a transaction. Real signatures are in docs/DEVNET.md.`}>
           ref {r.sig}
         </span>
       </div>

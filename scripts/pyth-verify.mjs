@@ -4,7 +4,7 @@
  *   npm run pyth:verify
  *
  * The addresses in app/src/lib/pyth.ts are hardcoded, which is the right call for a
- * browser client — but a hardcoded address is a claim, and claims should be
+ * browser client. But a hardcoded address is a claim, and claims should be
  * checkable. This finds every PriceUpdateV2 account for each feed, sorts by
  * publish_time, and exits non-zero if the one we ship is not the freshest.
  */

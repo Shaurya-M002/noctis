@@ -79,7 +79,7 @@ async function snapshot() {
     const l = assets[a.sym];
     if (!l) continue;
     const factors = factorsFor(a.sym, { assets, basis, crypto });
-    // No earnings calendar feed — carry the unconditional risk, do not assert a date.
+    // No earnings calendar feed, carry the unconditional risk, do not assert a date.
     const asset = {
       ...a, close: l.reference, depth: Math.max(20_000, l.liquidity), earningsInDays: -1,
     };
@@ -131,7 +131,7 @@ async function record() {
  *
  * The gate matters and the obvious version of it is wrong. A forecast says "this is
  * where the NEXT auction prints", so it cannot be scored against a price an hour
- * later — that is an intraday tick, not the thing predicted. A forecast only
+ * later, that is an intraday tick, not the thing predicted. A forecast only
  * resolves once `recordedAt + hoursToOpen` has passed AND the reference feed has
  * printed since that bell.
  *
@@ -188,7 +188,7 @@ async function score() {
   writeFileSync(FILE, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
   console.log(updated
     ? `  scored ${updated} forecast(s)`
-    : '  nothing resolved yet — no forecast has reached its bell');
+    : '  nothing resolved yet, no forecast has reached its bell');
   report();
 }
 
@@ -196,7 +196,7 @@ function report() {
   if (!existsSync(FILE)) { console.log('  no forecasts recorded'); return; }
   const rows = readFileSync(FILE, 'utf8').trim().split('\n').filter(Boolean).map((l: string) => JSON.parse(l));
   const scored = rows.filter((r) => r.scored);
-  console.log(`\n  FORECAST LOG — ${rows.length} recorded, ${scored.length} resolved\n`);
+  console.log(`\n  FORECAST LOG, ${rows.length} recorded, ${scored.length} resolved\n`);
   for (const r of rows) {
     console.log(`  ${r.etClock}  (${r.session}, ${r.hoursToOpen.toFixed(0)}h to the bell)`);
     if (!r.scored) {
@@ -257,7 +257,7 @@ async function auto() {
     if (last) {
       const ageH = (Date.now() - Date.parse(last.recordedAt)) / 3_600_000;
       if (ageH < MIN_GAP_H) {
-        console.log(`  last mark is ${ageH.toFixed(1)}h old, under the ${MIN_GAP_H}h floor — skipping`);
+        console.log(`  last mark is ${ageH.toFixed(1)}h old, under the ${MIN_GAP_H}h floor, skipping`);
         return;
       }
     }

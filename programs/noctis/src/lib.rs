@@ -1,8 +1,8 @@
 //! # Noctis
 //!
 //! A tokenized equity trades 24/7. Its primary venue prints a price for 32.5 of the
-//! 168 hours in a week. For the other 135.5 — and for the 65.5-hour weekend in
-//! particular — there is no price discovery anywhere on earth, yet the token still
+//! 168 hours in a week. For the other 135.5, and for the 65.5-hour weekend in
+//! particular. There is no price discovery anywhere on earth, yet the token still
 //! changes hands.
 //!
 //! Noctis publishes a mark for those hours *with its own uncertainty attached*, and
@@ -11,7 +11,7 @@
 //! underwriting vault makes you whole.
 //!
 //! There is no trading fee and no spread markup anywhere in this program. The only
-//! money that moves besides the trade itself is the premium — and the protocol's
+//! money that moves besides the trade itself is the premium, and the protocol's
 //! cut is taken from the vault's *net profit*, so Noctis earns nothing unless its
 //! own uncertainty estimates are honest.
 
@@ -114,7 +114,7 @@ pub mod noctis {
     ///
     /// The uncertainty is not decoration. It is the input the premium is computed
     /// from, so an oracle that understates sigma is underpricing the vault's own
-    /// risk — and the vault is the party that pays for that.
+    /// risk, and the vault is the party that pays for that.
     pub fn publish_mark(
         ctx: Context<PublishMark>,
         mid: u64,
@@ -214,13 +214,13 @@ pub mod noctis {
     /// Write assurance over an exposure the caller already has.
     ///
     /// Note what this instruction does NOT do: it does not move the equity token.
-    /// Noctis is not a venue. You execute wherever you like — Jupiter, Raydium, a
-    /// CEX — and this writes **parametric** cover against the mark Noctis published,
+    /// Noctis is not a venue. You execute wherever you like, Jupiter, Raydium, a
+    /// CEX. And this writes **parametric** cover against the mark Noctis published,
     /// settling on the official opening print.
     ///
     /// Parametric matters. The payout is a function of two published numbers, the
     /// mark and the auction print, and of nothing about your actual fill. So there
-    /// is no claims adjuster, no proof-of-loss, no oracle for your P&L — settlement
+    /// is no claims adjuster, no proof-of-loss, no oracle for your P&L, settlement
     /// is one permissionless instruction. The cost is basis risk: if you executed
     /// materially away from the mark, you are covered relative to the mark and not
     /// relative to what you paid.
@@ -424,7 +424,7 @@ pub struct Config {
 pub struct Vault {
     pub tvl: u64,
     /// Capital reserved against live receipts. Derived from the two legs below,
-    /// never accumulated directly — see `Vault::reserve`.
+    /// never accumulated directly, see `Vault::reserve`.
     pub exposure: u64,
     /// Gross reserve owed to receipts that lose when prices GAP DOWN (covered longs).
     pub long_risk: u64,
@@ -450,8 +450,8 @@ impl Vault {
     ///
     ///     reserve = max(long, short)  +  RESIDUAL · min(long, short)
     ///
-    /// Why that shape. For a SINGLE name the two legs are mutually exclusive — one
-    /// gap cannot be both up and down — so the worst case is `max`, not the sum.
+    /// Why that shape. For a SINGLE name the two legs are mutually exclusive, one
+    /// gap cannot be both up and down, so the worst case is `max`, not the sum.
     /// Across DIFFERENT names both can pay at once (AAPLx gaps down while TSLAx
     /// gaps up), so some of the smaller leg has to stay reserved. RESIDUAL is the
     /// fraction that can land simultaneously: 0 would assume one name, 1 would
@@ -461,7 +461,7 @@ impl Vault {
     /// The obvious formula, `|long − short| + RESIDUAL · min`, is wrong and a test
     /// caught it: its derivative in the smaller leg is negative, so adding cover on
     /// the other side *reduced* the reserve. Monotonicity in each leg is a safety
-    /// property, not a nicety — writing risk must never free capital.
+    /// property, not a nicety, writing risk must never free capital.
     ///
     /// Deliberately not a covariance matrix. On-chain that is an N×N of estimated
     /// correlations, maintained every block, for a second-order refinement of a
@@ -506,7 +506,7 @@ pub struct AssetMark {
     /// Monotonic counter for the dark window a receipt belongs to.
     ///
     /// Without this, `open_print` from one Monday stays on the account forever and
-    /// the NEXT weekend's receipts settle instantly against a week-old auction —
+    /// the NEXT weekend's receipts settle instantly against a week-old auction.
     /// pick whichever direction it pays and drain the vault. Receipts carry the
     /// epoch they were written in and only settle against that epoch's print.
     pub epoch: u64,
@@ -526,7 +526,7 @@ pub struct Receipt {
     pub qty_micro: u64,
     pub is_buy: bool,
     pub fill_price: u64,
-    /// Frozen at trade time — the band the user was quoted is the band they get.
+    /// Frozen at trade time, the band the user was quoted is the band they get.
     pub sigma_abs: u64,
     pub tier: u8,
     pub premium: u64,
@@ -839,7 +839,7 @@ pub enum NoctisError {
     Paused,
     #[msg("Mark must be positive")]
     BadMark,
-    #[msg("Uncertainty exceeds the ceiling — refusing to quote")]
+    #[msg("Uncertainty exceeds the ceiling, refusing to quote")]
     SigmaTooWide,
     #[msg("Unknown session code")]
     BadSession,

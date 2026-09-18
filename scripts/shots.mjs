@@ -17,7 +17,7 @@ await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForTimeout(700);
 
 // Crypto sells off through Sunday and equity beta follows it down at the bell.
-// SPYx opens 2.6% below the mark — three sigma — so the assurance actually pays.
+// SPYx opens 2.6% below the mark, three sigma, so the assurance actually pays.
 await page.getByRole('button', { name: 'Sunday risk-off' }).click();
 await page.waitForTimeout(400);
 await page.getByRole('button', { name: /^SPYx/ }).click();

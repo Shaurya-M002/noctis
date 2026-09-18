@@ -1,4 +1,4 @@
-# Nyx — the fair-value engine
+# Nyx, the fair-value engine
 
 > The job is not "estimate the price." The job is **estimate the price the opening
 > auction will print, and say how wrong that estimate is allowed to be.**
@@ -17,7 +17,7 @@ While the NYSE is shut, these keep printing:
 | `FX` | the dollar | DXY, or the USDC–EURC cross |
 | `RATES` | rates | tokenized T-bill yield drift |
 
-Plus one more witness that is not a factor: the token's **own on-chain tape** —
+Plus one more witness that is not a factor: the token's **own on-chain tape**.
 signed order flow since the close, with the USDC volume that stood behind it.
 
 ## The point estimate
@@ -41,7 +41,7 @@ mid = close · exp(r̂)
 
 This is why Noctis beats *both* of its own inputs in the backtest rather than
 tracking whichever one happens to be better. `var_tape` is estimated from
-thinness — how much depth stood behind the volume that traded:
+thinness, how much depth stood behind the volume that traded:
 
 ```
 sd_tape = 0.0072 · sqrt(depth / max(volume, 0.002·depth)) · (idioVol / 0.25)
@@ -50,7 +50,7 @@ sd_tape = 0.0072 · sqrt(depth / max(volume, 0.002·depth)) · (idioVol / 0.25)
 A book that traded $2k against $240k of depth is not evidence. A book that
 traded $200k is.
 
-## σ — the variance budget
+## σ, the variance budget
 
 Five terms, all published, all visible in the UI:
 
@@ -68,7 +68,7 @@ var_model = idioVol² · t_days/252  +  Σ_k (β_ik · noise_k)²
 var_fused = var_model · var_tape / (var_model + var_tape)
 ```
 
-### 3. Future path variance — the term everyone forgets
+### 3. Future path variance, the term everyone forgets
 
 ```
 future = totalVol² · informationHours(hoursToOpen) / 6.5 / 252
@@ -83,16 +83,16 @@ came out at 65.6% and weekend gaps blew straight through the band, because the
 model was confidently answering the wrong question.
 
 It had a second, subtler form. `informationHours` was applied as a *flat* weight
-taken from whichever session happened to be current — so at Monday noon, with the
+taken from whichever session happened to be current, so at Monday noon, with the
 next bell 21 hours away, the `regular` weight of 1.0 counted 21 calendar hours as
 21 trading hours and σ came out at 3% for AAPL while Nasdaq was actively printing
 it. The live forecast tool surfaced that within a minute of being pointed at a
 weekday. Both windows, elapsed and remaining, are now **integrated** hour by hour
-via `informationHoursAhead` — and `world.ts` generates its latent paths on the same
+via `informationHoursAhead`, and `world.ts` generates its latent paths on the same
 integrated clock, so the backtest is not scoring the model against a straw man.
 
-It also gives σ the right *shape*: widest in the middle of the weekend — far from
-the last real price and still far from the next one — narrowing as Monday
+It also gives σ the right *shape*: widest in the middle of the weekend, far from
+the last real price and still far from the next one, narrowing as Monday
 approaches. Scrub the slider in the demo and watch the band close.
 
 ### 4. Disagreement
@@ -101,7 +101,7 @@ approaches. Scrub the slider in the demo and watch the band close.
 disagreement = (0.45 · (r_tape − r_model))²
 ```
 
-Two witnesses contradicting each other is itself information — about how little
+Two witnesses contradicting each other is itself information, about how little
 anyone knows right now.
 
 ### 5. Event risk
@@ -133,7 +133,7 @@ is a fairness property of the backtest, not a convenience.
 ## Live inputs
 
 In live mode the same engine runs on real mainnet data, with two additions the
-synthetic world never needed — the weekend basis and leave-one-out factor
+synthetic world never needed, the weekend basis and leave-one-out factor
 construction. Both are in [DATA.md](DATA.md).
 
 ## What the model does not do
@@ -141,7 +141,7 @@ construction. Both are in [DATA.md](DATA.md).
 - No news / NLP. A headline-driven jump is uncovered and shows up as event risk.
 - No cross-listing arbitrage (an ADR still trading in Frankfurt is a real signal
   we do not use).
-- No microstructure model of the auction itself — the opening print has its own
+- No microstructure model of the auction itself, the opening print has its own
   imbalance dynamics we treat as noise.
 - Betas are static. They should be rolling and shrunk toward a sector prior.
 

@@ -2,7 +2,7 @@
  * Judging-time kill switch.
  *
  * Append `?pyth=off` to the URL and every Pyth code path goes quiet, leaving the
- * rest of live mode exactly as it was. No redeploy, no rebuild — a judge can do it
+ * rest of live mode exactly as it was. No redeploy, no rebuild, a judge can do it
  * from their own address bar if an RPC is having a bad afternoon.
  *
  * Reads `false` under node, deliberately: `engine/*.ts` runs the backtest and the

@@ -11,7 +11,7 @@ export function AssetRail({
         const m = marks[a.sym];
         const sel = a.sym === sym;
 
-        // In live mode a name can simply be absent — a mint with no route, a feed
+        // In live mode a name can simply be absent, a mint with no route, a feed
         // that dropped it. Say so rather than crashing or inventing a price.
         if (!m) {
           return (

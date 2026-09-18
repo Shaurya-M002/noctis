@@ -1,5 +1,5 @@
 /**
- * Read the live devnet deployment. No wallet, no setup — just look.
+ * Read the live devnet deployment. No wallet, no setup, just look.
  *
  *   npx tsx engine/devnet-state.ts
  *

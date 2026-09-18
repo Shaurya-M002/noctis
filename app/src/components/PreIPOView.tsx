@@ -24,7 +24,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
 
   if (!snap || !q) {
     return (
-      <Panel title="Pre-IPO — PreStocks on mainnet">
+      <Panel title="Pre-IPO, PreStocks on mainnet">
         <p className="py-10 text-center text-[12px] text-ink3">
           {s.error ? `Feeds unavailable: ${s.error}` : 'Reading Jupiter, Tessera and the recorded gap log…'}
         </p>
@@ -71,7 +71,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
             <Stat label="Widest gap spread" value={pct(spread)} tone="mark" size="sm"
                   sub="between the richest and cheapest name, right now" />
             <Stat label="Complex-wide basis" value={pctSigned(snap.basis)} size="sm"
-                  sub="the median — a liquidity premium, not a forecast" />
+                  sub="the median, a liquidity premium, not a forecast" />
             <p className="border-t border-line pt-2 text-[10px] leading-snug text-ink3">
               For comparison, the same measurement across xStocks on a weekend is
               about 1.3 points. There is no exchange here to pull these back.
@@ -83,8 +83,8 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
       {/* centre */}
       <div className="space-y-4">
         <Panel
-          title={`${q.company} — what is it worth?`}
-          sub="Nobody can tell you. There is no exchange, so there is no price to be right about — only a mark, and a token that disagrees with it."
+          title={`${q.company}, what is it worth?`}
+          sub="Nobody can tell you. There is no exchange, so there is no price to be right about, only a mark, and a token that disagrees with it."
         >
           <div className="grid gap-3 lg:grid-cols-3">
             <div className="rounded-xl border border-line bg-panel/60 p-4">
@@ -121,7 +121,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
           {st && (
             <div className="mt-3 rounded-lg border border-line bg-void/50 p-3">
               <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-ink3">
-                Which side is actually moving — measured over {st.hours.toFixed(1)}h, {st.n} samples
+                Which side is actually moving, measured over {st.hours.toFixed(1)}h, {st.n} samples
               </div>
               <Bar label="issuer mark" v={st.markVel} max={Math.max(st.markVel, st.tokenVel)} tone="ink" />
               <Bar label="on-chain token" v={st.tokenVel} max={Math.max(st.markVel, st.tokenVel)} tone="tape" />
@@ -132,7 +132,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
                   faster. Almost all of the gap&apos;s movement is the token, so what
                   you are insuring is on-chain noise against a slow reference.</>
                 ) : (
-                  <>Unusually, the <em>mark</em> is moving as fast as the token — and this
+                  <>Unusually, the <em>mark</em> is moving as fast as the token, and this
                   name only printed{' '}
                   <span className="num text-ink2">{st.distinctTokens}</span> distinct
                   prices in {st.n} samples. Here the token is the stale side, not the
@@ -184,7 +184,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
           <p className="mt-2.5 text-[10.5px] leading-relaxed text-ink3">
             Two regulated-ish issuers, both holding real exposure, both publishing
             on-chain, disagreeing by tens of percent on what the same company is
-            worth. That disagreement is not noise to be smoothed away — it is the
+            worth. That disagreement is not noise to be smoothed away, it is the
             honest width of the answer, and it is exactly what a σ is for.
           </p>
         </Panel>
@@ -217,7 +217,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
               <Cand label="diffusion, from our log" v={g.diffusion} win={g.basis === 'diffusion'} />
               <Cand label="the band the gap sits in" v={g.stationary} win={g.basis === 'stationary'} />
               <Cand label="token vol, 38d of candles" v={g.tokenBound ?? 0} win={g.basis === 'token'} />
-              <Cand label="floor — we will not claim tighter" v={0.02} win={g.basis === 'floor'} />
+              <Cand label="floor. We will not claim tighter" v={0.02} win={g.basis === 'floor'} />
             </div>
 
             <p className="mt-2 border-t border-line pt-2 text-[10px] leading-snug text-ink3">
@@ -226,7 +226,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
               {s.vol ? <>the token, over{' '}
                 <span className="num">{s.vol.days.toFixed(0)}</span> days of candles
                 with <span className="num">{compact(s.vol.medianHourlyVolume)}</span>{' '}
-                median hourly volume</> : 'the token'} — is measurable. That ceiling is
+                median hourly volume</> : 'the token'}, is measurable. That ceiling is
               real data; the rest is bounded by it.
             </p>
 
@@ -234,7 +234,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
               <p className="mt-1.5 border-t border-warn/20 pt-1.5 text-[10px] leading-snug text-warn">
                 Not calibrated at this horizon. {st?.n ?? 0} samples over{' '}
                 {(st?.hours ?? 0).toFixed(1)}h of our own log cannot score a{' '}
-                {s.horizonDays}-day move — nothing has been held that long yet. The
+                {s.horizonDays}-day move, nothing has been held that long yet. The
                 recorder is still running and this box updates with it.
               </p>
             )}
@@ -242,7 +242,7 @@ export function PreIPOView({ s }: { s: ReturnType<typeof usePreIPO> }) {
             {st?.realised && (
               <div className="mt-2 rounded border border-line bg-panel/60 p-2">
                 <div className="mb-1 text-[9.5px] font-medium uppercase tracking-[0.1em] text-ink3">
-                  What we CAN score — {(st.scorableHours * 60).toFixed(0)} min horizon
+                  What we CAN score, {(st.scorableHours * 60).toFixed(0)} min horizon
                 </div>
                 <div className="flex items-baseline justify-between text-[10.5px]">
                   <span className="text-ink3">realised σ</span>

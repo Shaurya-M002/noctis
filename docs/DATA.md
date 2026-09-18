@@ -8,7 +8,7 @@ Noctis has three modes. The toggle is in the header.
 | clock | scrubbable weekend | actual wall clock |
 | the model | Nyx | **the same Nyx** |
 | the premium math | `pricing.ts` | **the same `pricing.ts`** |
-| can you settle? | yes — the auction is simulated | no — Monday hasn't happened |
+| can you settle? | yes. The auction is simulated | no, Monday hasn't happened |
 
 Nothing about the model is special-cased for live mode. Only the inputs change.
 That is the point of having it.
@@ -31,7 +31,7 @@ substituting a stale number.
 ### Why hourly candles rather than a 24h change
 
 Every price API will hand you `priceChange24h` for free. It is the wrong window.
-At 10:00 ET on a Sunday, a rolling 24h return spans half of Saturday — a period
+At 10:00 ET on a Sunday, a rolling 24h return spans half of Saturday, a period
 the equity market was already closed through, and which is therefore already in
 the last official price. Noctis needs the return measured **from the actual last
 ET close**, so it pulls hourly candles and picks the bar nearest that instant.
@@ -52,7 +52,7 @@ SPYx   −0.75%    METAx  −1.36%    GOOGLx −0.55%
 
 Read naively, that says the whole US equity market is about to gap down 1.3%. It
 says nothing of the sort. It is the discount holders accept for wanting out before
-anyone can hedge against the cash equity — the price of liquidity on a Sunday, and
+anyone can hedge against the cash equity, the price of liquidity on a Sunday, and
 it disappears at the opening bell.
 
 So Nyx computes the **complex-wide basis** as the median dislocation and strips it
@@ -71,7 +71,7 @@ until you know why. The venue panel says so on screen.
 `MKT` is read off SPYx's de-based dislocation and `SECT` off the median of the
 tech names. If a name is allowed to contribute to the factor that then explains
 it, the model reads its own input back as independent evidence and understates σ.
-SPYx was the worst offender, because it *is* the market proxy — it was getting a
+SPYx was the worst offender, because it *is* the market proxy, it was getting a
 0.44% σ off one observation counted twice.
 
 So when marking asset *i*, the factors are rebuilt excluding *i*. Costs nothing,
@@ -80,7 +80,7 @@ removes the circularity for every name at once. `factorsFor()` in `feeds.ts`.
 ## Missing data widens σ, it does not read as zero
 
 There is no free, always-on source for a dollar index or a tokenised-bill yield.
-Coinbase's `EURC-USD` book is dead — its most recent candle is from August 2024.
+Coinbase's `EURC-USD` book is dead, its most recent candle is from August 2024.
 
 The wrong response is to set those factors to 0, because 0 is a *confident*
 statement that the dollar hasn't moved. The right response is to admit we cannot
@@ -93,15 +93,15 @@ Missing data should make the model less confident, not accidentally more.
 ## What live mode cannot do
 
 **It cannot verify itself.** Scoring a mark requires an opening print, and Monday
-09:30 ET hasn't happened. Every calibration number quoted anywhere in this repo —
-RMSE, coverage, loss ratio — comes from the synthetic backtest, where the latent
+09:30 ET hasn't happened. Every calibration number quoted anywhere in this repo.
+RMSE, coverage, loss ratio, comes from the synthetic backtest, where the latent
 truth is known and hidden from the model.
 
 That split is deliberate and it is the honest arrangement available in a week:
 **live data proves the inputs are real; the synthetic backtest proves the model is
 calibrated.** Neither claim is made with the other's evidence.
 
-**It is not wallet-connected.** The ticket in live mode is a quote — what the
+**It is not wallet-connected.** The ticket in live mode is a quote, what the
 program would charge at the σ shown, computed by the same fixed-point formula the
 chain runs. The executable path is exercised by `scripts/localnet-test.sh`
 instead, which is the more checkable of the two.

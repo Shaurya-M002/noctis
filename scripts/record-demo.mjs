@@ -96,7 +96,7 @@ await card('NOCTIS',
   'Markets close. The internet\'s version of them doesn\'t.<br>'
   + '<span class="k">Somebody has to price the gap.</span>', 3200);
 
-// ── 0:04 — the product, live, immediately ──────────────────────────────
+// ── 0:04. The product, live, immediately ──────────────────────────────
 await page.getByRole('button', { name: 'Live mainnet' }).click();
 await wait(7000);
 await say('This is live mainnet, right now. Real prices, no API key, no server.', 3200);
@@ -107,9 +107,9 @@ await say('The same tokenised Apple, eight pools, one instant —<br><b>a thousa
   + '<i>Nothing closes it: the stock market is shut, so there is nothing to arbitrage against.</i>', 5000);
 await hush();
 
-// ── 0:20 — Pyth, and the measurement ───────────────────────────────────
+// ── 0:20. Pyth, and the measurement ───────────────────────────────────
 await to('text=PYTH, READ STRAIGHT OFF SOLANA MAINNET', 240);
-await say('Pyth is the best price oracle there is — decoded here straight off the chain.', 3200);
+await say('Pyth is the best price oracle there is, decoded here straight off the chain.', 3200);
 await say('We measured its feed instead of trusting the marketing.'
   + '<i>24,000 on-chain writes. It runs Sunday 20:00 to Friday 20:00 ET, then stops dead for 48 hours. That silence is the hole.</i>', 5600);
 await hush();
@@ -117,7 +117,7 @@ await hush();
 await card('So what is it worth,',
   'during the 48 hours when <span class="k">nobody</span> is quoting it?', 3000);
 
-// ── 0:36 — the answer, and the product ─────────────────────────────────
+// ── 0:36. The answer, and the product ─────────────────────────────────
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.getByRole('button', { name: 'Simulation' }).click();
 await wait(1200);
@@ -126,7 +126,7 @@ await wait(500);
 await page.getByRole('button', { name: /^SPYx/ }).click();
 await wait(900);
 await say('Noctis answers with a price <b>and an error bar</b>.'
-  + '<i>Not a last trade — a forecast of Monday\'s opening auction, published with how wrong it is allowed to be.</i>', 5200);
+  + '<i>Not a last trade. A forecast of Monday\'s opening auction, published with how wrong it is allowed to be.</i>', 5200);
 await hush();
 
 await to('text=REOPEN ASSURANCE', 200);
@@ -134,7 +134,7 @@ await say('The trade is free. The only thing you can buy is <b>certainty</b>.'
   + '<i>Pay a premium and a vault makes you whole if Monday opens outside your band.</i>', 5000);
 await hush();
 
-// ── 1:00 — the money shot ──────────────────────────────────────────────
+// ── 1:00. The money shot ──────────────────────────────────────────────
 await page.getByRole('button', { name: /^Pin/ }).click();
 await wait(300);
 await page.getByRole('button', { name: /^(Cover|Take the gap naked)/ }).click();
@@ -158,28 +158,28 @@ await say('Three identical trades. Three outcomes.'
   + '<i>Naked: −$862. Band: paid $25, recovered $585. Pin: paid $118, and lost exactly that. The premium was the whole downside.</i>', 6400);
 await hush();
 
-// ── 1:30 — does it work ────────────────────────────────────────────────
+// ── 1:30. Does it work ────────────────────────────────────────────────
 await to('text=DOES ANY OF THIS ACTUALLY WORK', 200);
 await page.getByRole('button', { name: /Run \d+-night backtest/ }).click();
 await wait(2000);
 await to('text=DOES ANY OF THIS ACTUALLY WORK', 200);
 await say('200 weekends the model never saw. <b>58% better</b> than the last close.'
-  + '<i>And the error bar is honest: 75% of prints land inside one sigma, 95% inside two — which identified the distribution as a Student-t, and made the product cheaper, not dearer.</i>', 7000);
+  + '<i>And the error bar is honest: 75% of prints land inside one sigma, 95% inside two. Which identified the distribution as a Student-t, and made the product cheaper, not dearer.</i>', 7000);
 await hush();
 
-// ── 1:52 — pre-IPO ─────────────────────────────────────────────────────
+// ── 1:52. Pre-IPO ─────────────────────────────────────────────────────
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.getByRole('button', { name: 'Pre-IPO' }).click();
 await wait(11000);
 await to('text=EVERY NAME, AND EVERY DISAGREEMENT', 250);
-await say('Now take the bell away entirely — pre-IPO tokens have <b>no exchange at all</b>.'
+await say('Now take the bell away entirely, pre-IPO tokens have <b>no exchange at all</b>.'
   + '<i>The gap spans thirty points. And a second issuer disagrees by 56% on what Kalshi is worth. Nobody knows to within a factor of two.</i>', 6600);
 await hush();
 
-// ── 2:10 — the bug ─────────────────────────────────────────────────────
+// ── 2:10. The bug ─────────────────────────────────────────────────────
 await card('We went looking for holes in our own settlement path.',
   '<span class="k">We found one.</span><br><br>'
-  + '<span style="font-size:19px;color:#8b93a2">The opening print stayed on the account forever — so the next weekend you could buy cover '
+  + '<span style="font-size:19px;color:#8b93a2">The opening print stayed on the account forever, so the next weekend you could buy cover '
   + 'in whichever direction last Monday favoured, and settle instantly. Repeat until the vault is empty.</span>', 7000);
 
 await card('Closed.',

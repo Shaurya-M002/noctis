@@ -65,7 +65,7 @@ export function runBacktest(nights = 200, tier: Tier = 'BAND', notionalPerTrade 
 
   for (let n = 0; n < nights; n++) {
     const sc = jitter(bases[n % bases.length], n);
-    // Quote 6 hours before the auction — a realistic "late Sunday" decision point.
+    // Quote 6 hours before the auction, a realistic "late Sunday" decision point.
     const h = sc.windowHours * 0.9;
     const w = worldAt(sc, h);
     // A real session off the scenario's own calendar, so `nowMs` and `isOpen` are

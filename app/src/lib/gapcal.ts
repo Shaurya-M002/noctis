@@ -5,7 +5,7 @@
  *
  * GeckoTerminal serves free, keyless, CORS-open hourly OHLCV going back over a
  * month for every one of these pools. So the TOKEN half of the gap is fully
- * observable in history. The MARK half is not — neither issuer publishes one — and
+ * observable in history. The MARK half is not, neither issuer publishes one, and
  * the tempting move is to proxy the mark with a slow EMA of the token, on the
  * reasoning that a secondary-market mark is a smoothed traded price.
  *
@@ -14,14 +14,14 @@
  *     OPENAI     real gap  +0.62%     EMA-168h proxy  -13.73%
  *     ANTHROPIC  real gap  -4.44%     EMA-168h proxy  -23.28%
  *
- * The issuer's mark tracks the token far more closely than a weekly EMA — nearer a
+ * The issuer's mark tracks the token far more closely than a weekly EMA, nearer a
  * 6-to-24-hour one. Which means the mark is not a slow independent estimate at all;
  * it co-moves with the same secondary market the token follows. Calibrating a gap
  * sigma off that proxy produced 37-70% for a seven-day cover, and every bit of it
  * was the proxy's error rather than the gap's volatility.
  *
  * So this module does NOT reconstruct a gap history. It reports the one thing the
- * candles genuinely establish — how volatile the token is, with volume behind it —
+ * candles genuinely establish, how volatile the token is, with volume behind it.
  * and leaves the gap distribution to the only honest source we have, which is our
  * own recorded log. Sigma is bounded by the token's realised volatility, because
  * the gap cannot move faster than its two legs; that bound is real, and it is all

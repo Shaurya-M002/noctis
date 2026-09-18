@@ -5,7 +5,7 @@
  *
  * Why this runs on a timer from the moment we decided to look at pre-IPO: unlike
  * every other part of this repo, a price history cannot be reconstructed later.
- * Neither PreStocks nor Tessera exposes a history endpoint — I checked. If we want
+ * Neither PreStocks nor Tessera exposes a history endpoint, I checked. If we want
  * to say anything calibrated about pre-IPO uncertainty by Friday, the only way is
  * to have been recording since Tuesday.
  *
@@ -31,7 +31,7 @@ const get = async (u: string) => {
   } finally { clearTimeout(t); }
 };
 
-/** Companies both issuers tokenise — the cross-issuer disagreement witnesses. */
+/** Companies both issuers tokenise, the cross-issuer disagreement witnesses. */
 const OVERLAP: Record<string, string> = {
   OPENAI: 'openai', SPACEX: 'spacex', KALSHI: 'kalshi',
 };
@@ -73,7 +73,7 @@ const OVERLAP: Record<string, string> = {
         jupPrice: j?.usdPrice ?? null,
         jupMark: j?.stockData?.price ?? null,
         jupLiquidity: j?.liquidity ?? null,
-        // Token-2022 ScaledUiAmount. The multiplier and its next scheduled change —
+        // Token-2022 ScaledUiAmount. The multiplier and its next scheduled change.
         // a split-like discontinuity with a published timestamp.
         uiMultiplier: j?.scaledUiConfig?.multiplier ?? null,
         nextMultiplier: j?.scaledUiConfig?.newMultiplier ?? null,

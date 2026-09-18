@@ -272,7 +272,7 @@ describe('noctis', () => {
   });
 
   it('makes a Pin holder whole when Monday gaps against them', async () => {
-    // Monday 09:30 ET. The auction prints 224.30 — 2.88% below the mark, well
+    // Monday 09:30 ET. The auction prints 224.30, 2.88% below the mark, well
     // outside the 0.79% band Noctis published.
     await program.methods.postOpenPrint(u64(224.30 * M))
       .accountsPartial({ config, oracle: authority.publicKey, asset })
@@ -358,7 +358,7 @@ describe('noctis', () => {
   it('closes the settlement-replay hole across dark windows', async () => {
     // The bug this guards: `open_print` used to persist on the asset account
     // forever. After one Monday auction, a receipt written the FOLLOWING weekend
-    // could be settled instantly against the previous week's print — pick
+    // could be settled instantly against the previous week's print, pick
     // whichever direction pays and drain the vault.
 
     // Close out the current window: print the auction, crank the queue.

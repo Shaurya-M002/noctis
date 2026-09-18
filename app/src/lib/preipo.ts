@@ -58,7 +58,7 @@ export interface GapStats {
   /** Per-sample stdev of log returns, mark and token side by side. */
   markVel: number;
   tokenVel: number;
-  /** Dispersion of the gap LEVEL — the stationary width the gap oscillates in. */
+  /** Dispersion of the gap LEVEL, the stationary width the gap oscillates in. */
   levelSd: number;
   /** Distinct token prices seen. A low count against many samples means stale. */
   distinctTokens: number;
@@ -71,7 +71,7 @@ export interface GapStats {
 export interface PreIPOSnapshot {
   fetchedAt: number;
   quotes: PreIPOQuote[];
-  /** Median gap across the complex — the part that is not name-specific. */
+  /** Median gap across the complex, the part that is not name-specific. */
   basis: number;
   stats: Record<string, GapStats>;
   historySamples: number;
@@ -104,7 +104,7 @@ async function getJSON(url: string, ms = 12_000) {
 /**
  * Read back the log this repo has been committing every five minutes.
  *
- * PreStocks exposes no price history and neither does Tessera — I checked every
+ * PreStocks exposes no price history and neither does Tessera, I checked every
  * plausible path. So the only way to say anything calibrated about how this gap
  * behaves is to have been recording it, and the only way to get that history into a
  * static browser app is to read our own committed file. raw.githubusercontent.com
@@ -128,7 +128,7 @@ async function fetchHistory(): Promise<{ rows: any[]; report: SourceReport }> {
       rows: [],
       report: {
         name: 'Noctis · recorded gap history', url: HISTORY, status: 'degraded',
-        detail: `${e instanceof Error ? e.message : e} — no calibration available`,
+        detail: `${e instanceof Error ? e.message : e}, no calibration available`,
         ms: Date.now() - t0,
       },
     };
@@ -155,7 +155,7 @@ function statsFrom(rows: any[]): { stats: Record<string, GapStats>; hours: numbe
     if (gaps.length < 3) continue;
     const ret = (xs: number[]) => xs.slice(1).map((v, i) => Math.log(v / xs[i]));
     // Score sigma against realised moves at the longest horizon the log supports.
-    // With hours of five-minute samples that is minutes, not days — but it is a
+    // With hours of five-minute samples that is minutes, not days, but it is a
     // real out-of-sample check, and it grows every time the recorder fires.
     const H = Math.max(1, Math.floor((gaps.length - 1) / 3));
     const moves: number[] = [];
@@ -201,7 +201,7 @@ export async function fetchPreIPO(): Promise<PreIPOSnapshot> {
    * The rival issuer's marks come out of our own recorded log, not a live call.
    *
    * Tessera's API sends no `access-control-allow-origin`, so a browser cannot read
-   * it at all — and this app has no server to proxy through. The five-minute
+   * it at all, and this app has no server to proxy through. The five-minute
    * recorder does have one (it runs in node), and it has been capturing Tessera
    * alongside everything else. So the committed log is not only the calibration
    * history, it is the only route cross-issuer data has into a static page.
@@ -248,7 +248,7 @@ export async function fetchPreIPO(): Promise<PreIPOSnapshot> {
         ms: Date.now() - t0,
       },
       {
-        name: 'Tessera · rival marks', url: `${TESSERA} (via the recorded log — no CORS)`,
+        name: 'Tessera · rival marks', url: `${TESSERA} (via the recorded log, no CORS)`,
         status: Object.keys(rivalVal).length ? 'ok' : 'degraded',
         detail: Object.keys(rivalVal).length
           ? `${Object.keys(rivalVal).length} overlapping companies, recorded server-side`
@@ -271,7 +271,7 @@ export async function fetchPreIPO(): Promise<PreIPOSnapshot> {
  * information. Random-walking that noise out to a week compounds a microstructure
  * artefact into a number with no meaning. And the gap is plainly NOT a random walk:
  * it oscillates inside a band, because the token is tethered to a mark that barely
- * moves. A mean-reverting series does not spread like sqrt(t) — it converges on its
+ * moves. A mean-reverting series does not spread like sqrt(t), it converges on its
  * stationary width.
  *
  * So the estimate is bounded by that stationary width, taken from the dispersion of

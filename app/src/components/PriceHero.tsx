@@ -11,7 +11,7 @@ export function PriceHero({
   asset, mark, base, dark, weekend, openPrint, scorecard,
 }: {
   asset: Asset; mark: Mark; base: Baselines; dark: boolean;
-  /** True only for weekend/holiday — when Pyth's own schedule says `C`. */
+  /** True only for weekend/holiday, when Pyth's own schedule says `C`. */
   weekend?: boolean;
   openPrint?: number;
   scorecard?: { atHours: number; mark: Mark; base: Baselines } | null;
@@ -44,15 +44,15 @@ export function PriceHero({
         <p className="mt-3 border-t border-mark/20 pt-2.5 text-[11.5px] leading-relaxed text-ink2">
           Not a last trade. A conditional expectation of Monday&apos;s opening
           print, published with a σ that is forecast error for that specific
-          auction — for a window that the feed above, by its own schedule, does
+          auction. For a window that the feed above, by its own schedule, does
           not cover.
         </p>
       </div>
 
       {/* What you'd have to use instead */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
-        {/* Be exact about Pyth. Its equity feeds publish 24/5 — verified on
-            mainnet, ticking every ~15s pre-market — and only the weekend is
+        {/* Be exact about Pyth. Its equity feeds publish 24/5, verified on
+            mainnet, ticking every ~15s pre-market, and only the weekend is
             marked `C` in its own schedule string. Claiming otherwise is both
             wrong and a weaker argument. */}
         <Alt
@@ -62,7 +62,7 @@ export function PriceHero({
             weekend
               ? 'Pyth schedule marks Sat/Sun “C”. Last publish Friday 16:00 ET.'
               : base.staleOracle.status === 'CLOSED'
-                ? 'Publishing — 24/5 covers pre-market, after-hours and overnight.'
+                ? 'Publishing, 24/5 covers pre-market, after-hours and overnight.'
                 : 'Trading. This is the settlement truth Noctis resolves back to.'
           }
           bad={weekend}
@@ -156,7 +156,7 @@ function Settled({
         <p className="mt-3 border-t border-truth/20 pt-2.5 text-[11.5px] leading-relaxed text-ink2">
           There is a real price again. Everything below is scored against the
           answers as they stood at <span className="num">+{atHours.toFixed(1)}h</span>,
-          when you actually had to act — not at the bell, when every estimate has
+          when you actually had to act, not at the bell, when every estimate has
           already converged on the truth.
         </p>
       </div>
@@ -189,7 +189,7 @@ function Settled({
         {errBook < errMark && (
           <p className="mt-3 rounded-md border border-line bg-void/60 px-2.5 py-2 text-[10.5px] leading-snug text-ink3">
             On <em>this</em> night the thin book happened to land closer. Over 800
-            nights it does not — the backtest below has Noctis at 3.58% RMSE against
+            nights it does not, the backtest below has Noctis at 3.58% RMSE against
             the book&apos;s 5.01%. One draw is one draw. And neither the book nor the
             close published a band, which is why neither of them could have
             underwritten the trade you just settled.

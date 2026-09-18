@@ -10,7 +10,7 @@ Noctis
 
 **One line**
 
-The only tokenised-equity project that publishes an error bar — a fair value for the
+The only tokenised-equity project that publishes an error bar, a fair value for the
 48 hours a week nobody prices,
 published with an error bar you can buy insurance against.
 
@@ -31,20 +31,20 @@ published with an error bar you can buy insurance against.
 ## What it is
 
 A week has 168 hours. US equities discover a price in 32.5 of them. Held in
-self-custody, xStocks trade all 168 — Raydium, Orca and Meteora do not close.
+self-custody, xStocks trade all 168, Raydium, Orca and Meteora do not close.
 Kraken's own book is 24/5 with weekends still in development, which sharpens the
 point rather than softening it: the venue that could manage weekend risk is shut,
 and the one that stays open has no risk desk.
 
 So for four fifths of the week the asset changes hands at a price no venue on
-earth is producing. Pyth covers 24/5 beautifully and then stops for the weekend —
+earth is producing. Pyth covers 24/5 beautifully and then stops for the weekend.
 its own schedule marks Saturday and Sunday `C`. The last official
 close ignores everything since Friday. The 24/7 book is one $40k order and tens of
 basis points wide, with no cash-equity arbitrage available to pull it back. Pyth
-Pro's overnight feeds close most of the weekday hole — 24/**5** — and leave the
+Pro's overnight feeds close most of the weekday hole, 24/**5**, and leave the
 weekend. We measured how much: Pyth's equity feeds run Sunday 20:00 ET to Friday
-20:00 ET continuously and then stop for exactly 48 hours. That 48-hour window —
-where neither the exchange nor an oracle says anything — is the one Noctis is for.
+20:00 ET continuously and then stop for exactly 48 hours. That 48-hour window.
+where neither the exchange nor an oracle says anything, is the one Noctis is for.
 We originally claimed 65.5 hours, bell to bell, and corrected it after walking
 24,000 on-chain writes.
 
@@ -55,11 +55,11 @@ always-on signals and the token's own on-chain tape, fused by precision, produce
 a mid *and* a posterior σ. σ is the product, not the decoration.
 
 **It sells certainty about the reopening print, and nothing else.** Noctis is not a
-venue and never touches your trade — you execute wherever you like. It writes
+venue and never touches your trade, you execute wherever you like. It writes
 **parametric** cover struck at the published mark: at **Band** you absorb the first
 1σ and an underwriting vault pays every basis point beyond it; at **Pin** you are
-made whole to the official opening print. Priced as what it is — a one-sided option
-on the overnight gap — quoted in dollars, itemised. Because the payout depends only
+made whole to the official opening print. Priced as what it is, a one-sided option
+on the overnight gap, quoted in dollars, itemised. Because the payout depends only
 on two published numbers, settlement is one permissionless instruction with no
 claims adjuster.
 
@@ -68,14 +68,14 @@ claims adjuster.
 **Best Use of Pyth Market Data.** Pyth is not a logo on this submission, it is load
 bearing. The market calendar is parsed from Pyth's own schedule string, replacing a
 holiday list we had typed by hand. The equity prices are decoded from
-`PriceUpdateV2` accounts on Solana mainnet in the browser — Hermes now needs a key
+`PriceUpdateV2` accounts on Solana mainnet in the browser, Hermes now needs a key
 and equities sit in the Pro tier, but the chain is free. And the 48-hour figure that
 the whole pitch now rests on came from measuring Pyth's feed rather than assuming
 anything about it. `docs/PYTH.md` has the account table, the stale-account trap that
 would have rendered a price 8.4% wrong, and `npm run pyth:verify` to re-derive it.
 
 We also corrected a claim in our own favour because of this work: we had written
-that Pyth's equity feeds report `MARKET_CLOSED` during our window. They do not —
+that Pyth's equity feeds report `MARKET_CLOSED` during our window. They do not.
 they publish 24/5 and we verified it ticking every 15 seconds pre-market. Pyth
 covers more than we credited, and the honest version of our argument is narrower
 and stronger.
@@ -84,7 +84,7 @@ and stronger.
 Jupiter for the mark and the on-chain price and Tessera as a second witness on the
 three companies both issuers tokenise. `docs/PREIPO.md`.
 
-Not entering Meteora DBC or Clawpump — both require launching a token, which this
+Not entering Meteora DBC or Clawpump, both require launching a token, which this
 project deliberately does not have. `docs/COMPETITION.md` explains why rather than
 bolting something on.
 
@@ -101,7 +101,7 @@ bolting something on.
 
 ## Why Solana
 
-The problem is *created* by tokenization — an equity that only trades 09:30–16:00
+The problem is *created* by tokenization, an equity that only trades 09:30–16:00
 has no weekend pricing problem. Solana carries ~82% of tokenized equity volume, so
 this is where the hole is.
 
@@ -117,7 +117,7 @@ a lender, an AMM or a perp venue can consume σ without asking us. Full argument
 Every venue in this problem space charges basis points on your notional. That toll
 pays the same whether the venue's price was any good.
 
-Noctis charges nothing for the trade. It charges a premium on σ — which means
+Noctis charges nothing for the trade. It charges a premium on σ, which means
 tightening the model, the thing that makes the product better, is also the thing
 that shrinks per-trade revenue. The protocol takes **10% of the underwriting
 vault's net profit** and nothing on volume, so a badly calibrated σ earns us
@@ -131,7 +131,7 @@ a weekend where the vault loses and we earn nothing.
   assurance receipts, permissionless settlement. Integer fixed-point premium math
   with checked downcasts, mirrored by the client so a validator reproduces the
   number the user was shown.
-- **15 on-chain lifecycle tests** on a real validator, 0 failing —
+- **15 on-chain lifecycle tests** on a real validator, 0 failing.
   `./scripts/localnet-test.sh`.
 - **12 Rust unit tests** on the premium and settlement math.
 - **The demo app**, in three modes. *Simulation*: the four answers side by side, a
@@ -152,11 +152,11 @@ a weekend where the vault loses and we earn nothing.
 
 ## What live data changed
 
-Pointing the code at mainnet was not a cosmetic step — it found two real defects.
+Pointing the code at mainnet was not a cosmetic step, it found two real defects.
 The whole xStocks complex trades below reference on a Sunday, and reading that
 naively made Nyx bearish on every name at once; it is a liquidity premium, not a
 forecast, so the median is now stripped out. And SPYx, which *is* the market
-proxy, was contributing to the factor that then explained it — one observation
+proxy, was contributing to the factor that then explained it, one observation
 counted twice, and a 0.44% σ it had not earned. Factors are now built
 leave-one-out.
 
@@ -173,15 +173,15 @@ latent path:
 |---|---|
 | RMSE vs opening print | **4.02%** (last close 9.43%, thin book 5.15%) |
 | Improvement over doing nothing | **57.4%** |
-| Coverage at 1σ | 76.1% — normal says 68.3%, t(4) says 77.0% |
-| Coverage at 2σ | 95.8% — normal says 95.4%, t(4) says 95.3% |
+| Coverage at 1σ | 76.1%, normal says 68.3%, t(4) says 77.0% |
+| Coverage at 2σ | 95.8%, normal says 95.4%, t(4) says 95.3% |
 | Underwriting loss ratio | 0.66 Band / 0.74 Pin |
 | Worst single night | −$5,859 |
 
 The coverage pair identifies the gap distribution as a standardised Student-t with
 4 degrees of freedom, so that is what the premium is priced off rather than a
-Gaussian. Counter-intuitively that made the product **cheaper** — 11% on Pin, 7% on
-Band — because at a 0 or 1σ deductible the taller peak beats the fatter tail.
+Gaussian. Counter-intuitively that made the product **cheaper**, 11% on Pin, 7% on
+Band. Because at a 0 or 1σ deductible the taller peak beats the fatter tail.
 
 ## What is not built
 
@@ -198,22 +198,22 @@ Written up in full in `docs/COMPETITION.md`, including a claim we had to correct
 
 **AfterHours** (Arbitrum Open House Singapore 2026) built weekend-gap puts on
 Robinhood Chain rTokens with an ERC-4626 writer vault, priced on-chain in Rust,
-with volatility split across open and closed seconds — the same insight as our
+with volatility split across open and closed seconds, the same insight as our
 information-time weighting. The insurance leg of Noctis is not novel and we are
 not going to pretend it is. What they do not have is a fair-value engine: they
 price off Chainlink's last print, which during the dark window is Friday's close.
 
-**Pyth already publishes confidence intervals** — the only major oracle that does.
+**Pyth already publishes confidence intervals**, the only major oracle that does.
 An earlier draft of ours said σ was "the number every other oracle omits," which
 was simply wrong. The surviving distinction: Pyth's `conf` is publisher
 disagreement *right now*; ours is forecast error for a *specific future auction*.
 And Pyth's equity feeds stop publishing across the weekend, which is the window we
-exist for. (They do publish pre-market and overnight — we initially claimed
+exist for. (They do publish pre-market and overnight, we initially claimed
 otherwise and corrected it after checking the chain.)
 
 What we believe is new: publishing a forecast σ for the reopening print and
 pricing a product off it, so model calibration and protocol revenue are the same
-number — and getting paid on vault net profit rather than volume.
+number, and getting paid on vault net profit rather than volume.
 
 ## Next
 
@@ -221,7 +221,7 @@ number — and getting paid on vault net profit rather than volume.
    Monday-open gaps instead of a synthetic vol-of-vol process.
 2. Oracle committee: stake-weighted, ed25519 aggregation, slashable when the
    auction proves a mark was outside its own published band.
-3. Portfolio VaR for vault sizing — weekend gaps across 8 names are heavily
+3. Portfolio VaR for vault sizing, weekend gaps across 8 names are heavily
    correlated and the current reserve model treats receipts as independent.
 4. Make the Assurance Receipt transferable. It is already a claim on the vault;
    a secondary market in weekend gap risk falls out of the design.

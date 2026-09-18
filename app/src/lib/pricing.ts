@@ -7,7 +7,7 @@
  *
  * The guarantee is a one-sided option on the overnight gap. We price it with a
  * Bachelier (normal) partial expectation, then load it for capital scarcity and
- * concentration. No bps fee on notional anywhere in this file — that is the point.
+ * concentration. No bps fee on notional anywhere in this file, that is the point.
  */
 
 /** Standard normal pdf. */
@@ -32,9 +32,9 @@ export const Phi = (x: number) => 0.5 * (1 + erf(x / Math.SQRT2));
 
 /**
  * E[(Z - k)^+] for Z ~ N(0,1). The expected adverse overshoot beyond k sigma.
- * k = 0 gives phi(0) = 0.39894 — the classic half-straddle.
+ * k = 0 gives phi(0) = 0.39894, the classic half-straddle.
  *
- * Kept for reference. The premium does NOT use it — see `PE` below.
+ * Kept for reference. The premium does NOT use it, see `PE` below.
  */
 export function partialExpectationGaussian(k: number): number {
   return phi(k) - k * (1 - Phi(k));
@@ -61,7 +61,7 @@ export function partialExpectationGaussian(k: number): number {
  */
 const PE_T4: Record<string, number> = {
   '0': 0.353549,   // Pin  — vs Gaussian 0.398942 (0.886x)
-  '1': 0.077346,   // Band — vs Gaussian 0.083315 (0.928x)
+  '1': 0.077346,   // Band, vs Gaussian 0.083315 (0.928x)
 };
 
 export function partialExpectation(k: number): number {
@@ -116,7 +116,7 @@ export interface PremiumQuote {
   sizeLoad: number;
   /** What the user actually pays, USDC. */
   premium: number;
-  /** Premium as a fraction of notional — shown only so people can compare to a fee. */
+  /** Premium as a fraction of notional, shown only so people can compare to a fee. */
   bps: number;
   /** The worst the user can do, in USDC, after the guarantee. */
   maxAdverse: number;
@@ -137,7 +137,7 @@ const FLOOR = 0.01;
  * Then we measured. Once sigma itself was calibrated (see engine/backtest.ts:
  * 68.7% coverage at 1σ against a 68.3% target) the underwriting book already ran
  * at a ~0.75 loss ratio on the fair price plus the two loads below. The extra
- * multiplier took it to 0.57 — LPs earning a great return by overcharging users
+ * multiplier took it to 0.57, LPs earning a great return by overcharging users
  * for a risk that was already priced. It is gone.
  *
  * The 25% of premium that is not expected claims IS the LP's compensation for

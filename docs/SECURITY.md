@@ -15,7 +15,7 @@ So after the first Monday auction, the account permanently carried *a* print. Th
 following weekend an attacker could:
 
 1. read last Monday's print, and the mark Noctis is publishing now;
-2. see which direction pays — say last week printed well below where the mark sits;
+2. see which direction pays, say last week printed well below where the mark sits;
 3. buy **Pin** cover on a long, whose payout is `(fill − open) × qty` with a zero
    deductible;
 4. call the permissionless `settle_receipt` **immediately**, against a week-old
@@ -48,7 +48,7 @@ denial of the free tier. Fixed with a monotonic counter; test:
 
 `RegisterAsset`, `PublishMark`, `PostOpenPrint` and `AdminOnly` took `config` as a
 plain `Account<Config>` with a `has_one`. An attacker could pass *any* account of
-the right type — including one they had initialised with themselves as `oracle`.
+the right type. Including one they had initialised with themselves as `oracle`.
 All four now carry `seeds = [b"config"], bump = config.bump`.
 
 ### Silent truncation in premium math
@@ -70,13 +70,13 @@ This is the largest single risk in the design and the first thing to fix. The
 intended shape: a committee with ed25519 signature aggregation, stake-weighted,
 **slashable when the auction later proves a published mark lay outside its own
 published band**. The band is the commitment that makes the slashing condition
-objective — which is a second reason to publish σ.
+objective, which is a second reason to publish σ.
 
 ### Vault reserve uses one correlation for every pair
 
 The reserve is `max(long_risk, short_risk) + 0.5 · min(...)`, tracked as two legs
-on the vault. That is right in shape — one gap cannot pay both sides of a name, and
-across different names only part of the smaller leg can land at once — but it is a
+on the vault. That is right in shape, one gap cannot pay both sides of a name, and
+across different names only part of the smaller leg can land at once, but it is a
 single-factor haircut. One number stands in for every pairwise correlation, and
 AAPLx/GOOGLx does not co-move like MSTRx/COINx. A real book fits the matrix.
 
@@ -84,15 +84,15 @@ The first version of this formula was `|long − short| + 0.5·min`, which is
 **not monotone**: growing the smaller leg from 40k to 60k dropped the reserve from
 80k to 70k, so an attacker could unlock capital by writing cover on the opposite
 side. A property test caught it. Monotonicity in each leg is now asserted
-exhaustively over a grid — writing risk must never free capital.
+exhaustively over a grid, writing risk must never free capital.
 
 ### Tape manipulation
 
 The tape leg is weighted by traded volume against pool depth. An attacker willing
 to move real size through a thin weekend pool can drag the mark, then take the
 other side. Cost is bounded by depth, which on some names is under $100k.
-Unmitigated. The standard defences — TWAP across the window, trimmed means, a hard
-cap on how far the tape may pull the mark from the factor leg — are not built.
+Unmitigated. The standard defences, TWAP across the window, trimmed means, a hard
+cap on how far the tape may pull the mark from the factor leg, are not built.
 
 Note the basis subtraction helps slightly by accident: moving *one* name does not
 move the median, so a single-pool attack shows up as cross-sectional signal rather

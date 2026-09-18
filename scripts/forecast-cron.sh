@@ -32,7 +32,7 @@ LOG="$ROOT/forecasts/cron.log"
       if git push -q --no-verify origin HEAD:main 2>&1; then
         echo "  pushed"
       else
-        echo "  push failed — will retry next run"
+        echo "  push failed, will retry next run"
       fi
     fi
   fi

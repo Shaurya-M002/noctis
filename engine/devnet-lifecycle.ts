@@ -7,7 +7,7 @@
  * click each signature and watch a weekend mark get published, cover get written,
  * an opening print land and a payout settle, without running anything of ours.
  *
- * One wallet plays authority, oracle, LP and trader — devnet airdrops are scarce
+ * One wallet plays authority, oracle, LP and trader, devnet airdrops are scarce
  * and the roles are already separated by the tests.
  */
 import * as anchor from '@coral-xyz/anchor';
@@ -44,14 +44,14 @@ const log = (name: string, sig: string, note: string) => {
   anchor.setProvider(new anchor.AnchorProvider(conn, wallet, { commitment: 'confirmed' }));
   const program = anchor.workspace.noctis as Program<Noctis>;
 
-  console.log(`\n  NOCTIS — full lifecycle on devnet`);
+  console.log(`\n  NOCTIS, full lifecycle on devnet`);
   console.log(`  program ${program.programId.toBase58()}`);
   console.log(`  wallet  ${kp.publicKey.toBase58()}`);
   console.log(`  balance ${(await conn.getBalance(kp.publicKey)) / 1e9} SOL\n`);
 
   const [config] = PublicKey.findProgramAddressSync([Buffer.from('config')], program.programId);
   const [vault] = PublicKey.findProgramAddressSync([Buffer.from('vault')], program.programId);
-  // xStocks do not exist on devnet, so stand one up. Token-2022 specifically —
+  // xStocks do not exist on devnet, so stand one up. Token-2022 specifically.
   // that is what the real AAPLx is, and it makes the deployment actually exercise
   // the token_interface path rather than only the classic one.
   const assetMintPath = '.keys/devnet-aaplx.json';
@@ -73,7 +73,7 @@ const log = (name: string, sig: string, note: string) => {
   const [asset] = PublicKey.findProgramAddressSync(
     [Buffer.from('asset'), AAPLX.toBuffer()], program.programId);
 
-  // A stand-in USDC — devnet has no canonical one we can mint from. The quote mint
+  // A stand-in USDC, devnet has no canonical one we can mint from. The quote mint
   // is written into Config at initialise and enforced by `has_one` forever after,
   // so re-running this must reuse it rather than mint a fresh one. Read it back off
   // the chain if the protocol is already live; we kept the mint authority, so we can
@@ -95,7 +95,7 @@ const log = (name: string, sig: string, note: string) => {
 
 
   if (!existing) {
-    log('initialise — 10% of vault net profit, nothing on volume',
+    log('initialise, 10% of vault net profit, nothing on volume',
       await program.methods.initialize(1000)
         .accountsPartial({ authority: kp.publicKey, quoteMint: usdc, config, vault }).rpc(),
       'protocol_take_bps = 1000, charged on profit not flow');
@@ -105,7 +105,7 @@ const log = (name: string, sig: string, note: string) => {
     log('register AAPLx at its Friday close',
       await program.methods.registerAsset(u64(231.04 * M), u64(240_000 * M))
         .accountsPartial({ config, authority: kp.publicKey, assetMint: AAPLX, asset }).rpc(),
-      'close 231.04, depth $240k — a Token-2022 mint, as the real AAPLx is');
+      'close 231.04, depth $240k, a Token-2022 mint, as the real AAPLx is');
   }
 
   log('publish a weekend mark WITH its uncertainty',
@@ -132,14 +132,14 @@ const log = (name: string, sig: string, note: string) => {
     await program.methods.openPosition(u64(50 * M), true, 2, u64(100 * M))
       .accountsPartial({ trader: kp.publicKey, config, vault, asset, quoteMint: usdc,
         traderQuote: mine, vaultQuote, tokenProgram: TOKEN_PROGRAM_ID }).rpc(),
-    'zero fee, zero spread — the only charge is the premium');
+    'zero fee, zero spread, the only charge is the premium');
   const paid = Number(before - (await getAccount(conn, mine)).amount) / M;
   console.log(`      premium charged on-chain: $${paid.toFixed(2)}\n`);
 
-  log('Monday 09:30 — the auction prints',
+  log('Monday 09:30, the auction prints',
     await program.methods.postOpenPrint(u64(224.30 * M))
       .accountsPartial({ config, oracle: kp.publicKey, asset }).rpc(),
-    '224.30 — 2.88% below the mark, well outside the 0.79% band');
+    '224.30, 2.88% below the mark, well outside the 0.79% band');
 
   const pre = (await getAccount(conn, mine)).amount;
   log('settle the receipt (permissionless crank)',
@@ -154,7 +154,7 @@ const log = (name: string, sig: string, note: string) => {
   // The position itself is marked to the opening print; the payout offsets it. The
   // holder's actual outcome is the two together, minus what they paid.
   const gapLoss = (230.96 - 224.30) * 50;
-  console.log(`\n  RESULT — what the holder actually experienced`);
+  console.log(`\n  RESULT, what the holder actually experienced`);
   console.log(`    position marked to the open   -$${gapLoss.toFixed(2)}`);
   console.log(`    vault payout                  +$${payout.toFixed(2)}`);
   console.log(`    premium paid                  -$${paid.toFixed(2)}`);
@@ -166,7 +166,7 @@ const log = (name: string, sig: string, note: string) => {
   console.log(`\n  balance left ${(await conn.getBalance(kp.publicKey)) / 1e9} SOL\n`);
 
   const md = [
-    '# Devnet lifecycle — every step, on a public chain',
+    '# Devnet lifecycle, every step, on a public chain',
     '',
     'Produced by `npx tsx engine/devnet-lifecycle.ts`. Click any signature.',
     '',
@@ -180,10 +180,10 @@ const log = (name: string, sig: string, note: string) => {
     '',
     'Every one of these is live and inspectable, with its full transaction history:',
     '',
-    `- [Config](https://explorer.solana.com/address/${config.toBase58()}?cluster=devnet) — authority, oracle, quote mint, protocol take`,
-    `- [Vault](https://explorer.solana.com/address/${vault.toBase58()}?cluster=devnet) — TVL, the two risk legs, premiums and payouts to date`,
-    `- [AssetMark](https://explorer.solana.com/address/${asset.toBase58()}?cluster=devnet) — mid, sigma, epoch, the opening print`,
-    `- [Receipt](https://explorer.solana.com/address/${receipt.toBase58()}?cluster=devnet) — this position, its frozen sigma, settled flag`,
+    `- [Config](https://explorer.solana.com/address/${config.toBase58()}?cluster=devnet), authority, oracle, quote mint, protocol take`,
+    `- [Vault](https://explorer.solana.com/address/${vault.toBase58()}?cluster=devnet), TVL, the two risk legs, premiums and payouts to date`,
+    `- [AssetMark](https://explorer.solana.com/address/${asset.toBase58()}?cluster=devnet), mid, sigma, epoch, the opening print`,
+    `- [Receipt](https://explorer.solana.com/address/${receipt.toBase58()}?cluster=devnet), this position, its frozen sigma, settled flag`,
     '',
     'Initialise, register-asset and the LP deposit ran on the first invocation; this',
     'script skips them when they already exist, so they are not in the table below.',
@@ -225,7 +225,7 @@ const log = (name: string, sig: string, note: string) => {
     `- LP net **−$${Math.abs((v2.premiumsCollected.toNumber() - v2.payoutsPaid.toNumber()) / M).toFixed(2)}**`,
     '',
     'Every run deliberately posts a 2.88% adverse gap, so the vault loses every time.',
-    'A realistic book sees that outcome on roughly 1 night in 9 — see the backtest.',
+    'A realistic book sees that outcome on roughly 1 night in 9, see the backtest.',
   ].join('\n');
   writeFileSync('docs/DEVNET.md', md + '\n');
   console.log('  → docs/DEVNET.md\n');

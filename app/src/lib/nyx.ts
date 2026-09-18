@@ -1,11 +1,11 @@
 /**
- * Nyx — the fair-value engine.
+ * Nyx, the fair-value engine.
  *
  * When the NYSE is shut there is no price. There is only evidence. Nyx turns the
  * evidence that IS observable at 03:00 on a Sunday into two numbers:
  *
  *   mid   — the conditional expectation of the reopening print
- *   sigma — how wrong that is allowed to be
+ *   sigma, how wrong that is allowed to be
  *
  * sigma is the actual product. Every existing oracle publishes a point and lets
  * the protocol downstream pretend it is exact.
@@ -155,8 +155,8 @@ export function computeMark(
   //    opening auction. Even a perfect read of the present leaves the whole
   //    remaining path unaccounted for. Omitting this is why a naive weekend model
   //    blows through its own band on Monday: it was answering the wrong question.
-  // While the primary venue is open there is no gap to forecast — the thing we are
-  // predicting is printing right now — so the remaining path contributes nothing.
+  // While the primary venue is open there is no gap to forecast, the thing we are
+  // predicting is printing right now, so the remaining path contributes nothing.
   // Otherwise integrate the weight across the window rather than assuming the
   // current session's weight holds all the way to the bell.
   const futureHours = session.isOpen
@@ -165,7 +165,7 @@ export function computeMark(
   const future = (asset.totalVol ** 2) * (futureHours / 6.5 / 252);
 
   // 4. Disagreement: the two witnesses telling different stories is itself
-  //    information — about how little we know.
+  //    information, about how little we know.
   const gap = tape.volume > 0 ? tape.impliedReturn - modelRet : 0;
   const disagreement = (gap * 0.45) ** 2;
 

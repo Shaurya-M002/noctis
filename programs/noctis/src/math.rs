@@ -1,7 +1,7 @@
 //! Fixed-point premium math, mirrored bit-for-bit by `app/src/lib/pricing.ts`.
 //!
 //! Everything is unsigned integer arithmetic in one of two scales:
-//!   * PPM  (1e6) for ratios — sigma, coefficients, utilisation
+//!   * PPM  (1e6) for ratios, sigma, coefficients, utilisation
 //!   * micro-USDC (1e6) for money
 //!
 //! No floats: a validator must reproduce the same premium the client was shown,

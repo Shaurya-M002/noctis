@@ -1,14 +1,14 @@
 <h1>Noctis</h1>
 
-**The only tokenised-equity project that publishes an error bar — and puts money behind it.**
+**The only tokenised-equity project that publishes an error bar, and puts money behind it.**
 
 A fair value for the **48 hours a week** when neither the exchange nor Pyth says anything, with a measured uncertainty attached, and parametric cover priced off that uncertainty.
 
 Stocklana hackathon submission · Solana Foundation · September 2026
 
-**▶ [Open the live demo](https://shaurya-m002.github.io/noctis/)** — real mainnet data, no wallet needed ·
-**[Program on devnet](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)** — deployed, with the full lifecycle settled on-chain ·
-**[Watch the 2:07 walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** — captioned, no audio
+**▶ [Open the live demo](https://shaurya-m002.github.io/noctis/)** · real mainnet data, no wallet needed
+**[Program on devnet](https://explorer.solana.com/address/NoCTajFqJn1QScfX3KozwSitGzcVf6muHLKXoKQhbhE?cluster=devnet)** · deployed, full lifecycle settled on-chain
+**[Watch the 2:07 walkthrough](https://github.com/Shaurya-M002/noctis/releases/download/v0.1.0/noctis-demo.mp4)** · captioned, no audio
 
 ![Noctis](media/02-hero.png)
 
@@ -18,7 +18,7 @@ Stocklana hackathon submission · Solana Foundation · September 2026
 
 A week has 168 hours. US equities discover a price in **32.5** of them.
 
-Held in self-custody, xStocks trade **all 168** — Raydium, Orca and Meteora do not
+Held in self-custody, xStocks trade **all 168**, Raydium, Orca and Meteora do not
 close. (Kraken's own book is 24/5, with weekends still "in development", which
 sharpens the point: the venue that could manage weekend risk is shut, and the one
 that stays open is the one with no risk desk.) So for four fifths of the week, an
@@ -31,31 +31,31 @@ Sunday and you get one of three bad answers:
 | Last official close | Friday's number | ignores everything that has happened since |
 | The 24/7 order book | last trade | one $40k order, 26–60 bps to cross, no arb available to pull it back |
 
-Pyth Pro now covers pre-market through overnight — **24/5**. That is real progress
-and it closes most of the weekday hole — more of it than we first credited. We
+Pyth Pro now covers pre-market through overnight, **24/5**. That is real progress
+and it closes most of the weekday hole, more of it than we first credited. We
 measured the feed rather than trusting the marketing: it runs **Sunday 20:00 ET to
 Friday 20:00 ET continuously**, right through every weeknight, and then stops for
 exactly **48 hours**. So the window where neither the exchange nor an oracle says
 anything is 48 hours a week, not the 65.5 we originally claimed. Smaller, and now a
-measured number rather than a calendar subtraction — see [docs/PYTH.md](docs/PYTH.md).
+measured number rather than a calendar subtraction, see [docs/PYTH.md](docs/PYTH.md).
 
 That gap is what Noctis is for.
 
 ## Three modes
 
 The demo has one toggle in the header, and the three settings are three different
-answers to the same question — *what is this worth when nothing is quoting it?*
+answers to the same question, *what is this worth when nothing is quoting it?*
 
 | mode | what it is |
 |---|---|
 | **Simulation** | a scrubbable synthetic weekend with a known latent truth, so the model can be scored. Every calibration figure in this README comes from here. |
 | **Live mainnet** | real xStocks from Jupiter and DexScreener, real equity prices decoded out of Pyth's Solana accounts, real router quotes. No key, no server. |
-| **Pre-IPO** | eight PreStocks names where the weekend never ends — no exchange, no bell, and a second issuer publishing marks that disagree by up to 56%. |
+| **Pre-IPO** | eight PreStocks names where the weekend never ends. No exchange, no bell, and a second issuer publishing marks that disagree by up to 56%. |
 
 ## Live, on mainnet, right now
 
 The demo has three modes and the toggle is in the header. **Live** points the same
-model at real data — Jupiter for on-chain and reference prices, DexScreener for
+model at real data. Jupiter for on-chain and reference prices, DexScreener for
 volume and per-venue prints, Coinbase for crypto returns measured from the actual
 last ET close. Public endpoints, no API key, no server, fetched straight from the
 browser.
@@ -66,7 +66,7 @@ instant, real money in each:
 ![Venue dispersion](media/09-venues.png)
 
 **1019 basis points** between the highest and lowest *quoted* pool price. During
-Monday's session the same measurement reads **82 bps** — arbitrage tightens the
+Monday's session the same measurement reads **82 bps**, arbitrage tightens the
 pools when there is something to arbitrage against, and they scatter when there
 is not. That contrast is the thesis in one number.
 
@@ -77,11 +77,11 @@ Two honest qualifications, both on screen in the app:
   panel now shows what the router will *actually* fill: a **0.42% round trip at
   $1k, 2.40% at $100k**. That gap is where most tokenised-equity arbitrage
   headlines die.
-- Note the scale, though — assurance on AAPLx costs *tens of basis points* against
+- Note the scale, though, assurance on AAPLx costs *tens of basis points* against
   a round trip that already costs 42. The friction Noctis prices is small next to
   the friction already there.
 
-Pointing the code at mainnet also changed the model twice — see
+Pointing the code at mainnet also changed the model twice, see
 [docs/DATA.md](docs/DATA.md):
 
 - **The weekend basis is not a forecast.** Every xStock trades below its reference
@@ -92,15 +92,15 @@ Pointing the code at mainnet also changed the model twice — see
   help build the factor that then explains it was counting one observation twice
   and giving it a 0.44% σ it had not earned.
 
-And where a factor has no free always-on source — a dollar index, a tokenised-bill
-yield — it is reported as **no source** and σ widens by the full uncertainty of the
+And where a factor has no free always-on source, a dollar index, a tokenised-bill
+yield. It is reported as **no source** and σ widens by the full uncertainty of the
 move it would have explained. Setting it to zero would be a confident claim that
 the dollar has not moved. Missing data should make the model less confident, not
 accidentally more.
 
 ![Data sources](media/10-sources.png)
 
-Live mode **cannot verify itself** — scoring a mark needs an opening print, and
+Live mode **cannot verify itself**, scoring a mark needs an opening print, and
 Monday hasn't happened. So: live data proves the inputs are real, and the
 synthetic backtest below proves the model is calibrated. Neither claim borrows the
 other's evidence.
@@ -109,7 +109,7 @@ other's evidence.
 
 **1. It publishes a mark for hours when the incumbents publish nothing.**
 
-Nyx — the fair-value engine — fuses two independent, noisy witnesses to the
+Nyx. The fair-value engine, fuses two independent, noisy witnesses to the
 latent value of a tokenized equity:
 
 - a **factor model** over signals that never sleep (broad market, sector, crypto
@@ -120,10 +120,10 @@ It combines them by precision, which is why it beats both of its own inputs, and
 it publishes the posterior standard deviation **σ** alongside the mid.
 
 To be precise about the incumbent, because it matters: **Pyth already publishes a
-confidence interval** — it is the one oracle that does, and it deserves the credit.
+confidence interval**. It is the one oracle that does, and it deserves the credit.
 But two things differ. Pyth's `conf` is a *snapshot of disagreement between
 publishers right now*; Noctis's σ is a *forecast error for a specific future
-event*, the reopening auction. And Pyth's schedule marks the weekend `C` — closed —
+event*, the reopening auction. And Pyth's schedule marks the weekend `C`, closed.
 so its equity feeds stop publishing from Friday 16:00 ET until Monday. Noctis is not
 "the oracle with error bars." It is an error bar for the hours the other oracles are
 dark, and it resolves back to Pyth at the bell.
@@ -136,11 +136,11 @@ The hole is the weekend, not the overnight.
 **2. It sells certainty about the reopening print, and nothing else.**
 
 Noctis is **not a venue**. It never touches your trade. Execute on Jupiter,
-Raydium, a CEX, wherever — there is no order flow here to tax, which is exactly
+Raydium, a CEX, wherever, there is no order flow here to tax, which is exactly
 why the revenue model below is possible.
 
 What it sells is **parametric** cover struck at the published mark. The payout is a
-function of two published numbers — the mark, and the official opening print — and
+function of two published numbers, the mark, and the official opening print, and
 of nothing about your actual fill. No claims adjuster, no proof of loss, no oracle
 for your P&L: settlement is one permissionless instruction. The cost of that
 simplicity is basis risk, and we name it: if you executed materially away from the
@@ -167,14 +167,14 @@ The Pin holder's entire loss is the premium. That is what the product is.
 **3. It gets paid only when it is right.**
 
 Every dollar of premium goes to the underwriting vault. The protocol takes **10%
-of the vault's net profit** and nothing at all on your volume — there is no volume
+of the vault's net profit** and nothing at all on your volume, there is no volume
 to take, because Noctis is not in the trade. Mis-estimate σ and the vault loses
 money and Noctis earns zero. There is no order-flow revenue to hide behind. The
 incentive to be calibrated *is* the business model.
 
 ## Does it work?
 
-Every hackathon demo asserts this. `engine/backtest.ts` measures it — 800
+Every hackathon demo asserts this. `engine/backtest.ts` measures it, 800
 independent synthetic weekends and overnights across 8 names, with Nyx blind to
 the latent path it is scored against.
 
@@ -203,7 +203,7 @@ $ npx tsx engine/backtest.ts 800 BAND
 ```
 
 Read honestly. The point estimate beats both baselines. σ is not merely the right
-*width* — the coverage pins down the distribution's *shape*, and it is a
+*width*. The coverage pins down the distribution's *shape*, and it is a
 standardised Student-t with 4 degrees of freedom, not a normal. So that is what the
 premium is priced off.
 
@@ -211,7 +211,7 @@ That correction went the direction nobody expects. Fat tails sound like they sho
 make insurance dearer; at a deductible of 0 or 1σ the taller peak dominates instead,
 and the honest price came out **11% cheaper for Pin and 7% cheaper for Band** than
 the Gaussian formula we started with. The book still runs at a 0.66 loss ratio
-(0.74 on Pin) — real insurance-book margin, all of it LP compensation for variance.
+(0.74 on Pin). Real insurance-book margin, all of it LP compensation for variance.
 
 Every number here is one click away in the UI, and `engine/backtest.ts` reproduces
 it on your machine.
@@ -232,12 +232,12 @@ npm run forecast           # the running scorecard
 [`forecasts/`](forecasts/) holds timestamped marks with their bands and every input
 that produced them, written before the auction they predict. Check the commit date
 against the print. You do not have to trust us, run our code, or accept our
-synthetic world — the line was in the repo before the answer existed.
+synthetic world, the line was in the repo before the answer existed.
 
 It fills itself, and pushes. A LaunchAgent runs `scripts/forecast-cron.sh` hourly;
 the script takes a mark whenever US equities are dark and the last one is stale,
 scores whenever a forecast's bell has rung, commits, and pushes here. Nothing is
-recorded during the session, when there is a real price and nothing to forecast —
+recorded during the session, when there is a real price and nothing to forecast.
 so `marks.jsonl` appears at the next close and grows from there. A weekend leaves
 about 20 marks per name behind for Monday to grade.
 
@@ -246,7 +246,7 @@ about 20 marks per name behind for Monday to grade.
 Or run it yourself:
 
 ```bash
-# the demo — both modes, toggle in the header
+# the demo, all three modes, toggle in the header
 cd app && npm install && npm run dev        # http://localhost:5273
 
 # a timestamped forecast you can check later
@@ -263,7 +263,7 @@ cargo test -p noctis --lib
 ```
 
 `./scripts/localnet-test.sh` boots a throwaway validator, deploys the SBF binary
-and runs the whole lifecycle — register → publish mark → LP underwrites → RAW fill
+and runs the whole lifecycle, register → publish mark → LP underwrites → RAW fill
 (free) → Pin fill (premium charged, matched against the on-chain fixed-point math)
 → opening auction → settle → payout → capital released.
 
@@ -296,7 +296,7 @@ programs/noctis/       Anchor program  ·  program id NoCTajFqJn1QScfX3KozwSitGz
                        17 unit tests: premium math + the vault reserve's monotonicity
 app/                   the demo (Vite + React, hand-rolled SVG charts)
   src/lib/nyx.ts       the fair-value engine
-  src/lib/feeds.ts     live mainnet data — Jupiter, DexScreener, Coinbase
+  src/lib/feeds.ts     live mainnet data: Jupiter, DexScreener, Coinbase
   src/lib/useLive.ts   live mode: same model, real inputs
   src/lib/pricing.ts   the premium math, mirrored by math.rs
   src/lib/world.ts     deterministic synthetic world with a latent truth Nyx cannot see
@@ -311,26 +311,26 @@ docs/                  MODEL · PRICING · WHY_SOLANA · DEMO · SUBMISSION
 
 ## Docs
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) — running it from a clean clone, and three toolchain traps that cost us an hour each
+- [CONTRIBUTING.md](CONTRIBUTING.md). Running it from a clean clone, and three toolchain traps that cost us an hour each
 
-- [docs/PREIPO.md](docs/PREIPO.md) — the weekend that never ends: pre-IPO gaps, two issuers disagreeing by 56%, and a σ mistake worth recording
-- [docs/PYTH.md](docs/PYTH.md) — reading Pyth off mainnet keyless, the stale-account trap, and a headline number we had to correct
-- [docs/COMPETITION.md](docs/COMPETITION.md) — who else is doing this, what we did not invent, and what is actually new
-- [docs/DEVNET.md](docs/DEVNET.md) — the whole lifecycle settled on devnet, every step a clickable transaction
-- [docs/SECURITY.md](docs/SECURITY.md) — threat model, and the critical bug we found in our own settlement path
-- [docs/DATA.md](docs/DATA.md) — the live feeds, and the two things real data forced into the model
-- [docs/MODEL.md](docs/MODEL.md) — how the mark and σ are built, and what σ is made of
-- [docs/PRICING.md](docs/PRICING.md) — the premium as an option on the gap, and a load we tested and deleted
-- [docs/WHY_SOLANA.md](docs/WHY_SOLANA.md) — why this is not a web2 API with a token bolted on
-- [docs/DEMO.md](docs/DEMO.md) — the three-minute walkthrough
-- [docs/LIMITS.md](docs/LIMITS.md) — what is synthetic, what is unsolved, what would break first
+- [docs/PREIPO.md](docs/PREIPO.md). The weekend that never ends: pre-IPO gaps, two issuers disagreeing by 56%, and a σ mistake worth recording
+- [docs/PYTH.md](docs/PYTH.md). Reading Pyth off mainnet keyless, the stale-account trap, and a headline number we had to correct
+- [docs/COMPETITION.md](docs/COMPETITION.md). Who else is doing this, what we did not invent, and what is actually new
+- [docs/DEVNET.md](docs/DEVNET.md). The whole lifecycle settled on devnet, every step a clickable transaction
+- [docs/SECURITY.md](docs/SECURITY.md). Threat model, and the critical bug we found in our own settlement path
+- [docs/DATA.md](docs/DATA.md). The live feeds, and the two things real data forced into the model
+- [docs/MODEL.md](docs/MODEL.md), how the mark and σ are built, and what σ is made of
+- [docs/PRICING.md](docs/PRICING.md). The premium as an option on the gap, and a load we tested and deleted
+- [docs/WHY_SOLANA.md](docs/WHY_SOLANA.md), why this is not a web2 API with a token bolted on
+- [docs/DEMO.md](docs/DEMO.md), the three-minute walkthrough
+- [docs/LIMITS.md](docs/LIMITS.md). What is synthetic, what is unsolved, what would break first
 
 ## Honesty
 
 **Live mode** is real mainnet data from public keyless endpoints, listed with
 status and latency in the UI so you can check every one.
 
-**Simulation mode** is synthetic and deterministic — one seed, reproducible, and
+**Simulation mode** is synthetic and deterministic, one seed, reproducible, and
 documented in [docs/LIMITS.md](docs/LIMITS.md). Betas, vols and the latent path
 are calibrated to plausible values, not fetched. Every calibration number in this
 README comes from there, because scoring a mark requires an opening print that

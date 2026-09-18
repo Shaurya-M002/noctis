@@ -1,6 +1,6 @@
 # Visual system
 
-Dark by construction — the product is about the hours when the lights are off.
+Dark by construction, the product is about the hours when the lights are off.
 
 ## Chart palette
 
@@ -24,8 +24,8 @@ $ node validate_palette.js "#c98500,#3987e5,#1baf7a" --mode dark --surface "#0b0
 | 2 | `#3987e5` | the on-chain last trade |
 | 3 | `#1baf7a` | latent truth / the official opening print |
 
-**Friday's close is not a series.** It is a reference annotation — muted grey,
-dashed, directly labelled — because it is a constant, not a measurement.
+**Friday's close is not a series.** It is a reference annotation, muted grey,
+dashed, directly labelled, because it is a constant, not a measurement.
 
 Rejected: a four-colour set with red for the open print. It failed all-pairs CVD
 separation (ΔE 4.1 deutan against the aqua). The fix was to drop to three

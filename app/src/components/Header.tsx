@@ -35,7 +35,7 @@ export function Header({
 
         <div className="hidden h-8 w-px bg-line lg:block" />
 
-        {/* Real wall clock — always honest about what the actual market is doing. */}
+        {/* Real wall clock, always honest about what the actual market is doing. */}
         <div className="flex items-center gap-2.5">
           <span className={`h-1.5 w-1.5 rounded-full ${live.isDark ? 'bg-down pulse' : live.isOpen ? 'bg-up' : 'bg-warn'}`} />
           <div className="leading-tight">
@@ -92,7 +92,7 @@ export function Header({
             atOpen ? 'border-truth/50 text-truth'
               : session.isDark ? 'border-down/50 text-down' : 'border-warn/50 text-warn'
           }`}>
-            {atOpen ? 'OPENING AUCTION — MARKET LIVE' : session.label}
+            {atOpen ? 'OPENING AUCTION, MARKET LIVE' : session.label}
           </span>
           <span className="text-[11.5px] text-ink2">
             <span className="text-ink3">{mode === 'live' ? 'now ' : 'simulated clock '}</span>

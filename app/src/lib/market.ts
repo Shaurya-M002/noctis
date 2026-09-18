@@ -182,8 +182,8 @@ export function sessionAt(now: Date, cal: MarketCalendar = BUILTIN_CALENDAR): Se
     premarket: 'PRE-MARKET',
     afterhours: 'AFTER HOURS',
     overnight: 'OVERNIGHT (24/5)',
-    weekend: 'WEEKEND — MARKET DARK',
-    holiday: 'HOLIDAY — MARKET DARK',
+    weekend: 'WEEKEND, MARKET DARK',
+    holiday: 'HOLIDAY, MARKET DARK',
   };
 
   return {
@@ -220,7 +220,7 @@ export function informationHours(hoursClosed: number, kind: SessionKind): number
  * Applying the current session's weight to the whole remaining window is wrong and
  * badly so. At Monday noon the next bell is ~21 hours away; almost all of that is
  * overnight, but the current session is `regular`, so a flat weight of 1.0 counts
- * 21 calendar hours as 21 trading hours — three days of information — and sigma
+ * 21 calendar hours as 21 trading hours, three days of information, and sigma
  * comes out at 3% for AAPL while Nasdaq is actively printing it.
  *
  * Walk the window instead and sum the weight of whatever session each hour

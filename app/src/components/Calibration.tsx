@@ -95,7 +95,7 @@ export function Calibration() {
           </h3>
           <p className="mt-1 mb-3 text-[11px] text-ink3">
             Standardised errors (open − mark) ÷ σ. The right target depends on the
-            distribution&apos;s <em>shape</em>, not only its width — and we measured
+            distribution&apos;s <em>shape</em>, not only its width, and we measured
             the shape rather than assuming one. It is a Student-t with 4 degrees of
             freedom, so premiums are priced off t(4), which at these strikes is{' '}
             <span className="text-up">cheaper</span> than a Gaussian, not dearer.
@@ -116,7 +116,7 @@ export function Calibration() {
           </div>
           <p className="mt-2 text-[10px] leading-snug text-ink3">
             Solid bars are inside ±1σ. Under t(4) that should be about 77% of the
-            mass — a normal would say two thirds, and would be wrong here.
+            mass, a normal would say two thirds, and would be wrong here.
           </p>
         </div>
       </div>

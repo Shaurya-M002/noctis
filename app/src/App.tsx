@@ -78,7 +78,7 @@ function LiveView({
 
       <div className="space-y-4">
         <Panel
-          title={`${sym} — live, on mainnet`}
+          title={`${sym}, live, on mainnet`}
           sub="Every number on this screen was fetched from a public endpoint you can curl yourself."
         >
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
@@ -96,7 +96,7 @@ function LiveView({
               </div>
               <p className="mt-3 border-t border-mark/20 pt-2.5 text-[11.5px] leading-relaxed text-ink2">
                 Computed by the same Nyx that runs the simulation. Nothing is
-                special-cased for live mode — only the inputs changed.
+                special-cased for live mode, only the inputs changed.
               </p>
             </div>
             <div className="grid gap-2">
@@ -138,7 +138,7 @@ function LiveView({
 
         <Panel
           title="Where the same token is printing right now"
-          sub="Quoted pool prices, and — separately — what the router will actually fill."
+          sub="Quoted pool prices, and, separately, what the router will actually fill."
           right={live.dispersion > 0 && (
             <span className={`chip ${live.dispersion > 200 ? 'border-down/50 text-down' : 'border-warn/50 text-warn'}`}>
               {bps(live.dispersion)} quoted apart
@@ -195,7 +195,7 @@ function SimulationView({ n }: { n: ReturnType<typeof useNoctis> }) {
 
       <div className="space-y-4">
         <Panel
-          title={n.settled ? `${n.sym} — the scorecard` : `What is ${n.sym} worth right now?`}
+          title={n.settled ? `${n.sym}, the scorecard` : `What is ${n.sym} worth right now?`}
           sub={n.settled
             ? 'The auction has printed. Here is what each answer was worth.'
             : n.session.isDark
@@ -209,7 +209,7 @@ function SimulationView({ n }: { n: ReturnType<typeof useNoctis> }) {
 
         <Panel
           title="The closed window"
-          sub={`${n.scenario.name} — ${n.scenario.blurb}`}
+          sub={`${n.scenario.name}, ${n.scenario.blurb}`}
           right={
             <div className="flex items-center gap-2">
               <button onClick={() => n.setPlaying(!n.playing)}
@@ -302,7 +302,7 @@ function SettleBanner({
       <span className="text-ink2">
         Its <span className="num">+{atHours.toFixed(1)}h</span> mark was off by{' '}
         <span className="num text-mark">{errM.toFixed(2)}</span>
-        {inside ? ' — inside its own band' : ' — outside the band, and the vault pays for that'}
+        {inside ? '. Inside its own band' : ', outside the band, and the vault pays for that'}
       </span>
       <span className="text-ink2">
         Last close was off by <span className="num text-ink3">{errC.toFixed(2)}</span>
@@ -335,7 +335,7 @@ function Gap() {
         </div>
       ))}
       <p className="border-t border-line pt-2 text-[10px] leading-snug text-ink3">
-        We used to call the hole 65.5 hours — the exchange bell to bell. Then we
+        We used to call the hole 65.5 hours, the exchange bell to bell. Then we
         measured Pyth: its equity feeds run Sunday 20:00 ET to Friday 20:00 ET
         continuously, so they cover 17.5 of those hours. The window where neither
         the exchange nor the oracle says anything is <em>48 hours</em>, every
@@ -353,10 +353,10 @@ function Footer({ mode }: { mode: Mode }) {
         <span className="text-ink2">Noctis</span> · Stocklana hackathon submission ·
         Solana Foundation, September 2026.{' '}
         {mode === 'preipo'
-          ? 'Pre-IPO reads PreStocks and Tessera marks via Jupiter, plus this repo’s own committed gap log. No exchange exists for these, so there is no auction to settle against — see docs/PREIPO.md.'
+          ? 'Pre-IPO reads PreStocks and Tessera marks via Jupiter, plus this repo’s own committed gap log. No exchange exists for these, so there is no auction to settle against, see docs/PREIPO.md.'
           : mode === 'live'
-            ? 'Live mode reads Jupiter, DexScreener, Coinbase and Pyth from your browser — no key, no server. Marks are model output, not quotes, and nothing here is executable.'
-            : 'Simulation mode is synthetic and deterministic by design — see docs/MODEL.md. Switch to Live for real mainnet prices.'}
+            ? 'Live mode reads Jupiter, DexScreener, Coinbase and Pyth from your browser, no key, no server. Marks are model output, not quotes, and nothing here is executable.'
+            : 'Simulation mode is synthetic and deterministic by design, see docs/MODEL.md. Switch to Live for real mainnet prices.'}
         {' '}Nothing here is investment advice or an offer of insurance.
       </p>
     </footer>
